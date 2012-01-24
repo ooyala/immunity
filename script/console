@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+require "irb"
+require "pathological"
+require "immunity_system"
+
+def reload!
+  paths = ["lib/*.rb", "models/*.rb"]
+  suppress_warnings do
+    paths.each do |path|
+      Dir.glob(path).each { |file| load(file) }
+    end
+  end
+  nil
+end
+
+# When we reload our files using "reload!", many of our constants get redefined which spews forth many
+# warnings. Hide those warnings because it's a crappy UX.
+def suppress_warnings(&block)
+  original_verbosity = $VERBOSE
+  begin
+    $VERBOSE = nil
+    result = yield
+  ensure
+    $VERBOSE = original_verbosity
+  end
+  result
+end
+
+IRB.start(__FILE__)
