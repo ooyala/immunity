@@ -5,6 +5,9 @@ source "http://gems.sv2/"
 gem "sinatra"
 gem "rerun"
 gem "pathological"
+gem "state_machine"
+gem "sequel"
+gem "mysql" # For Sequel's MySQL adapter.
 
 group :test do
   source "http://gems.us-east-1.ooyala.com:8080"
