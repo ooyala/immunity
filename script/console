@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby-local-exec
 
-require "irb"
 require "pathological"
-require "immunity_system"
+require "script/script_environment"
+require "irb"
 
 def reload!
   paths = ["lib/*.rb", "models/*.rb"]
