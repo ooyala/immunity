@@ -1,0 +1,48 @@
+GEM
+  remote: http://rubygems.org/
+  remote: file:/opt/ooyala/sas/current/vendor/
+  remote: http://gems.sv2/
+  remote: http://gems.us-east-1.ooyala.com:8080/
+  specs:
+    colorize (0.5.8)
+    gamut (0.0.12)
+      colorize
+      nokogiri
+      pathological (~> 0.2.4)
+      trollop
+    junit_xml_builder (1.1.0)
+      nokogiri (~> 1.4.4)
+    metaclass (0.0.1)
+    minitest (2.10.1)
+    mocha (0.10.3)
+      metaclass (~> 0.0.1)
+    nokogiri (1.4.7)
+    pathological (0.2.4)
+    rack (1.4.1)
+    rack-protection (1.2.0)
+      rack
+    rack-test (0.6.1)
+      rack (>= 1.0)
+    rerun (0.6.2)
+    scope (0.2.3)
+      minitest
+    sinatra (1.3.2)
+      rack (~> 1.3, >= 1.3.6)
+      rack-protection (~> 1.2)
+      tilt (~> 1.3, >= 1.3.3)
+    tilt (1.3.3)
+    trollop (1.16.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  gamut
+  junit_xml_builder
+  mocha
+  nokogiri
+  pathological
+  rack-test
+  rerun
+  scope
+  sinatra
