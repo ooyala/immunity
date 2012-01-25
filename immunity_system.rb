@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-require "rubygems"
 require "bundler/setup"
+require "pathological"
 require "config/environment"
 require "sinatra"
 require "pathological"
