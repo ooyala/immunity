@@ -2,12 +2,17 @@ source :rubygems
 source "file:///opt/ooyala/sas/current/vendor/"
 source "http://gems.sv2/"
 
+gem "rake"
 gem "sinatra"
 gem "rerun"
 gem "pathological"
 gem "state_machine"
 gem "sequel"
 gem "mysql" # For Sequel's MySQL adapter.
+gem "clockwork" # For scheduling periodic jobs.
+gem "foreman" # For running our 3 daemons (web service, resque, and clockwork) easily.
+gem "thin" # For running the webserver in development. Production uses Unicorn.
+gem "resque" # For running background jobs.
 
 group :test do
   source "http://gems.us-east-1.ooyala.com:8080"

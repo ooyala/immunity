@@ -1,3 +1,3 @@
 require "bundler/setup"
-require "pathological"
-require "immunity_system"
+require "config/environment"
+require "lib/models"
