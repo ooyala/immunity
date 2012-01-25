@@ -1,6 +1,7 @@
 # A temporary script for playing with the various states of a Build. Delete this once we begin writing tests.
 require "pathological"
 require "script/script_environment"
+require "immunity_system"
 
 puts "\n\n"
 
