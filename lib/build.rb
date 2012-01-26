@@ -2,7 +2,7 @@ require "state_machine"
 class Build < Sequel::Model
   @@regions = ["sandbox1", "sandbox2", "prod_region1", "prod_region2"]
 
-  def initialize()
+  def initialize(values = {}, from_db = false)
     super
     self.current_region ||= @@regions.first
   end
