@@ -15,6 +15,10 @@ gem "thin" # For running the webserver in development. Production uses Unicorn.
 gem "resque" # For running background jobs.
 gem "open4"
 
+group :dev do
+  gem "wirble" # colorized irb script/console
+end
+
 group :test do
   source "http://gems.us-east-1.ooyala.com:8080"
   gem "gamut"
