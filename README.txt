@@ -1,5 +1,5 @@
 # Setting up for development
-mysqladmin5 -u root create immunity_system
+./script/initial_setup.rb
 
 # Running
 See the Procfile for the commands you can run to launch the web server, resque, and clockwork.
