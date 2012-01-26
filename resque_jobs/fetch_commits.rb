@@ -3,18 +3,18 @@
 require "bundler/setup"
 require "pathological"
 require "script/script_environment"
-require "lib/logging"
+require "resque_jobs/jobs_helper"
 require "resque"
 require "open3"
 
 class FetchCommits
+  include JobsHelper
   @queue = :fetch_commits
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
   def self.perform
-    @logger = Logging.create_logger("fetch_commits.log")
-
+    setup_logger("fetch_commits.log")
     fetch_commits()
     # Reconnect to the database if our connection has timed out.
     # Build.select(1).first rescue nil
