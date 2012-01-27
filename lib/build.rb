@@ -1,4 +1,6 @@
 require "state_machine"
+require "resque_jobs/deploy_build"
+
 class Build < Sequel::Model
   @@regions = ["sandbox1", "sandbox2", "prod_region1", "prod_region2"]
 
@@ -97,6 +99,7 @@ class Build < Sequel::Model
 
   def schedule_deploy
     puts "scheduling deploy to #{current_region}."
+    Resque.enqueue(DeployBuild, repo, commit, current_region, id)
   end
 
   def notify_deploy_failed

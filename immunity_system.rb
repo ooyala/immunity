@@ -8,4 +8,11 @@ class ImmunitySystem < Sinatra::Base
   get "/" do
     "hello world"
   end
+
+  post "/deploy_succeed" do
+  end
+
+  post "/deploy_failed" do
+  end
+
 end
