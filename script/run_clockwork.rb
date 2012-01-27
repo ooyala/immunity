@@ -22,6 +22,6 @@ Clockwork.handler do |job_name|
 end
 
 # NOTE(philc): This is set to 3 seconds for testing purposes. Ideally we would only pull 
-Clockwork.every(3.seconds, "fetch_commits")
+Clockwork.every(30.seconds, "fetch_commits")
 
 Clockwork.run # This is a blocking call.

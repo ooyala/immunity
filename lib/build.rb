@@ -13,7 +13,7 @@ class Build < Sequel::Model
     # Events and the state changes they cause.
     #
     event :begin_deploy do
-      transition :awaiting_deploy => :deploying
+      transition :awaiting_deploy => :deploying, :if => :region_is_available_for_deploy?
     end
 
     event :deploy_failed do
@@ -43,6 +43,7 @@ class Build < Sequel::Model
 
     event :monitoring_succeeded do
       transition :monitoring => :awaiting_confirmation, :if => :requires_manual_deploy?
+      # TODO(philc): This is the wrong state transition. Fix.
       transition :monitoring => :deploying
     end
 
@@ -57,17 +58,25 @@ class Build < Sequel::Model
       self.current_region = next_region
     end
 
-    after_transition :on => :deploying do
-      schedule_deploy
+    after_transition any => :deploying do
+      schedule_deploy()
     end
 
-    after_transition :on => :monitoring do
+    after_transition any => :monitoring do
       enable_production_traffic_mirroring
     end
 
-    after_transition :on => :deploy_failed do
+    after_transition any => :deploy_failed do
       notify_deploy_failed
     end
+  end
+
+  # False if there's another Build already being deployed to the current region.
+  def region_is_available_for_deploy?
+    nonblocking_states = %W(deploy_failed awaiting_confirmation testing_failed monitoring_failed awaiting_deploy)
+    blocked = Build.filter(:repo => repo, :current_region => current_region).
+        filter("state NOT IN ?", nonblocking_states).count > 0
+    !blocked
   end
 
   def next_region
@@ -88,10 +97,6 @@ class Build < Sequel::Model
 
   def schedule_deploy
     puts "scheduling deploy to #{current_region}."
-  end
-
-  def staging_deploy_in_progress?
-    false
   end
 
   def notify_deploy_failed

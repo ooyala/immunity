@@ -15,28 +15,38 @@ class FetchCommits
 
   def self.perform
     setup_logger("fetch_commits.log")
-    fetch_commits()
+    begin
+      fetch_commits()
+    rescue => exception
+      logger.info("Failed to complete job: #{exception}")
+      raise exception
+    end
+
     # Reconnect to the database if our connection has timed out.
-    # Build.select(1).first rescue nil
+    Build.select(1).first rescue nil
   end
 
   def self.fetch_commits()
-    @logger.info "Fetching the newest commits."
-    return # TODO(philc): Remove this return statement
+    # TODO(philc): This repo name shouldn't be hardcoded here.
+    repos = ["html5player"]
 
-    repo_name = "html5player"
-
-    @logger.info "Fetching new commits from #{repo_name}."
-
-    project_repo = File.join(REPO_DIRS, repo_name)
-    run_command("cd #{project_repo} && git fetch")
-    latest_commit = run_command(`cd #{project_repo} && git rev-list --max-count=1 head`).strip
+    repos.each do |repo_name|
+      logger.info "Fetching new commits from #{repo_name}."
+      project_repo = File.join(REPO_DIRS, repo_name)
+      run_command("cd #{project_repo} && git fetch")
+      latest_commit = run_command("cd #{project_repo} && git rev-list --max-count=1 head").strip
+      if Build.first(:commit => latest_commit, :repo => repo_name).nil?
+        logger.info "#{repo_name} has new commits. The latest is now #{latest_commit}."
+        build = Build.create(:commit => latest_commit, :repo => repo_name)
+        build.fire_events(:begin_deploy)
+      end
+    end
   end
 
-  def run_command(command)
+  def self.run_command(command)
     stdout, stderr, status = Open3.capture3(command)
     Open3.popen3(command) { |stdin, stdout, stderr| stdout_stream = stdout }
-    raise "The command #{command} failed: #{stderr}" unless status == 0
+    raise %Q(The command "#{command}" failed: #{stderr}) unless status == 0
     stdout
   end
 end
