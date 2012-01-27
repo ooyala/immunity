@@ -14,7 +14,8 @@ class DeployBuild
   REPO_DIRS = File.expand_path("~/immunity_repos/")
   
   REGION_TO_SERVER = {
-    "sandbox1" => "ec2-107-22-34-118.compute-1.amazonaws.com"
+    "sandbox1" => "rui@127.0.0.1",
+    "sandbox2" => "root@ec2-107-22-34-118.compute-1.amazonaws.com"
   }
 
   def self.perform(repo, commit, current_region, build_id)
