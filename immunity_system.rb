@@ -12,9 +12,13 @@ class ImmunitySystem < Sinatra::Base
   end
 
   post "/deploy_succeed" do
+    build = Build.first(:id => params[:build_id])
+    build.fire_events(:deploy_succeeded)
   end
 
   post "/deploy_failed" do
+    build = Build.first(:id => params[:build_id])
+    build.fire_events(:deploy_failed)
   end
 
 end
