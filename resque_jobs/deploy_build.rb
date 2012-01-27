@@ -6,6 +6,7 @@ require "resque_jobs/jobs_helper"
 require "resque"
 require "open4"
 require "fileutils"
+require 'rest_client'
 
 class DeployBuild
   include JobsHelper
@@ -21,10 +22,11 @@ class DeployBuild
   def self.perform(repo, commit, current_region, build_id)
     setup_logger("deply_builds.log")
     begin
-      self.deploy_commit(repo, commit, current_region)
-      #self.run_command("curl http://localhost:3103/deploy_succeed/#{build_id} >/dev/null")
-    rescue
-      #self.run_command("curl http://localhost:3103/deploy_failed/#{build_id} >/dev/null")
+      output = self.deploy_commit(repo, commit, current_region)
+      RestClient.post 'http://localhost:3102/deploy_succeed', :build_id => build_id, :message => output
+      #self.run_command("curl /#{build_id} >/dev/null")
+    rescue Exception => e
+      RestClient.post 'http://localhost:3102/deploy_failed', :build_id => build_id, :message => e.message
     end
   end
 
