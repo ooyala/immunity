@@ -12,3 +12,4 @@ Sequel::Model.plugin :association_dependencies
 Sequel::Model.plugin :timestamps
 
 require "lib/build"
+require "lib/build_status"
