@@ -4,7 +4,7 @@ source "http://gems.sv2/"
 
 gem "rake"
 gem "sinatra"
-gem "rerun"
+gem "sass"
 gem "pathological"
 gem "state_machine"
 gem "sequel"
@@ -18,6 +18,7 @@ gem "rest-client"
 
 group :dev do
   gem "wirble" # colorized irb script/console
+  gem "rerun"
 end
 
 group :test do

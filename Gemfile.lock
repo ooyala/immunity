@@ -45,6 +45,7 @@ GEM
       vegas (~> 0.1.2)
     rest-client (1.6.7)
       mime-types (>= 1.16)
+    sass (3.1.12)
     scope (0.2.3)
       minitest
     sequel (3.28.0)
@@ -83,6 +84,7 @@ DEPENDENCIES
   rerun
   resque
   rest-client
+  sass
   scope
   sequel
   sinatra
