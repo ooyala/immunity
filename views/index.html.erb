@@ -7,9 +7,13 @@
 </head>
 
 <body>
-  <%= erb :"region.html", :locals => { :region_name => "Sandbox 1"} %>
-  <%= erb :"region.html", :locals => { :region_name => "Sandbox 2"} %>
-  <%= erb :"region.html", :locals => { :region_name => "Prod 3"} %>
-  <%= erb :"region.html", :locals => { :region_name => "Prod 4"} %>
+  <%=
+    # TODO(philc): This is just a standin datamodel for regions and their builds.
+    Build.regions.map do |region_name|
+      if build
+        erb :"region.html", :locals => { :region_name => region_name, :build => build }
+      end
+    end.join("\n")
+   %>
 </body>
 </html>

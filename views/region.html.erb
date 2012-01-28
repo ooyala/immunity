@@ -1,10 +1,11 @@
 <%#
   Params:
   - region_name
+  - build: the current Build
  %>
 <div class="region">
   <h2><%= region_name %></h2>
-  <div class="buildTitle">Build 229 (commit <a href="#">b8132c</a>)</div>
+  <div class="buildTitle"><%= build.readable_name %> (commit <a href="#"><%= build.short_commit %></a>)</div>
   <div class="status">
     <div class="title" class="deploying">Deploying</div>
     <div class="date">Ran Fri 8:23pm 30s</div>

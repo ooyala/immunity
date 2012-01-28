@@ -2,12 +2,17 @@ require "state_machine"
 require "resque_jobs/deploy_build"
 
 class Build < Sequel::Model
-  @@regions = ["sandbox1", "sandbox2", "prod_region1", "prod_region2"]
+  @@regions = ["sandbox1", "sandbox2", "prod3", "prod4"]
+  def self.regions() @@regions end
 
   def initialize(values = {}, from_db = false)
     super
     self.current_region ||= @@regions.first
   end
+
+  def readable_name() "Build #{id}" end
+  # An abbreviated commit SHA instead of the usual long SHA.
+  def short_commit() (commit || "")[0..6] end
 
   state_machine :state, :initial => :awaiting_deploy do
 

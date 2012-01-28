@@ -9,7 +9,9 @@ class ImmunitySystem < Sinatra::Base
   set :public_folder, "public"
 
   get "/" do
-    erb :"index.html"
+    # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
+    build = Build.first
+    erb :"index.html", :locals => { :build => build }
   end
 
   get "/styles.css" do
