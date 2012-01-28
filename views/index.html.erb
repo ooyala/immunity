@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Player immunity system</title>
+  <script src="https://github.com/ooyala/livecss/raw/master/livecss.js"></script>
+  <link rel="stylesheet" href="/styles.css" type="text/css" />
+</head>
+
+<body>
+  <%= erb :"region.html", :locals => { :region_name => "Sandbox 1"} %>
+  <%= erb :"region.html", :locals => { :region_name => "Sandbox 2"} %>
+  <%= erb :"region.html", :locals => { :region_name => "Prod 3"} %>
+  <%= erb :"region.html", :locals => { :region_name => "Prod 4"} %>
+</body>
+</html>

@@ -1,0 +1,45 @@
+body {
+  font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+  margin: 20px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+table { border-collapse: collapse; }
+
+h2 {
+  border-bottom: 1px dashed #ccc;
+  margin-bottom: 6px;
+}
+
+$columnWidth: 300px;
+.region {
+  width: 600px;
+  margin: 20px 0;
+  .buildTitle {
+    font-size: 20px;
+    width: $columnWidth;
+    float: left;
+  }
+  .status {
+    .title { font-size: 20px; }
+    float: left;
+  }
+
+  .nextUp { clear: both; }
+
+  h4 {
+    font-size: 16px;
+    font-weight: normal;
+    margin: 10px 0 0px 0;
+  }
+
+  .history {
+    font-size: 14px;
+    color: #666;
+    td.build { width: $columnWidth; }
+  }
+}

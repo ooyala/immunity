@@ -3,12 +3,17 @@ require "bundler/setup"
 require "pathological"
 require "script/script_environment"
 require "sinatra"
+require "sass"
 
 class ImmunitySystem < Sinatra::Base
   set :public_folder, "public"
 
   get "/" do
-    "hello world"
+    erb :"index.html"
+  end
+
+  get "/styles.css" do
+    scss :styles
   end
 
   post "/deploy_succeed" do
