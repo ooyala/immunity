@@ -1,6 +1,6 @@
 body {
   font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
-  margin: 20px;
+  padding: 20px;
 }
 
 * {
@@ -9,6 +9,11 @@ body {
 }
 
 table { border-collapse: collapse; }
+
+header {
+  h1 { font-weight: normal; }
+  border-bottom: 1px solid #ccc;
+}
 
 h2 {
   border-bottom: 1px dashed #ccc;
