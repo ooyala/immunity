@@ -20,19 +20,19 @@ class RunTests
   }
 
   def self.perform(repo, current_region, build_id)
-    setup_logger("deply_builds.log")
+    setup_logger("run_tests.log")
     begin
       stdout_message, stderr_message = self.start_tests(repo, current_region)
       test_fail = /(\d+) failure/.match(stdout_message)
-      if test_fail[0] > 0
-        RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id,
+      if test_fail[0].to_i > 0
+        RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
           :stdout => stdout_message, :stderr => stderr_message, :message => "test fail"
       else
-        RestClient.post 'http://localhost:3102/test_succeed', :build_id => build_id,
+        RestClient.post 'http://localhost:3102/test_succeed', :build_id => build_id, :region => current_region,
           :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed"
       end
     rescue Exception => e
-      RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id,
+      RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
           :stdout => "", :stderr => e.message, :message => "test error"
     end
   end

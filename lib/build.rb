@@ -1,5 +1,6 @@
 require "state_machine"
 require "resque_jobs/deploy_build"
+require "resque_jobs/run_tests"
 
 class Build < Sequel::Model
   @@regions = ["sandbox1", "sandbox2", "prod3"]
@@ -70,6 +71,10 @@ class Build < Sequel::Model
       schedule_deploy()
     end
 
+    after_transition any => :testing do
+      schedule_test()
+    end
+
     after_transition any => :monitoring do
       enable_production_traffic_mirroring
     end
@@ -106,6 +111,11 @@ class Build < Sequel::Model
   def schedule_deploy
     puts "scheduling deploy to #{current_region}."
     Resque.enqueue(DeployBuild, repo, commit, current_region, id)
+  end
+  
+  def schedule_test
+    puts "Scheduling testing for #{current_region}"
+    Resque.enqueue(RunTests, repo, current_region, id)
   end
 
   def notify_deploy_failed

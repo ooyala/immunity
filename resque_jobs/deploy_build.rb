@@ -23,10 +23,10 @@ class DeployBuild
     setup_logger("deply_builds.log")
     begin
       output = self.deploy_commit(repo, commit, current_region)
-      RestClient.post 'http://localhost:3102/deploy_succeed', :build_id => build_id, :message => output
+      RestClient.post 'http://localhost:3102/deploy_succeed', :build_id => build_id, :message => output, :region => current_region,
       #self.run_command("curl /#{build_id} >/dev/null")
     rescue Exception => e
-      RestClient.post 'http://localhost:3102/deploy_failed', :build_id => build_id, :message => e.message
+      RestClient.post 'http://localhost:3102/deploy_failed', :build_id => build_id, :message => e.message, :region => current_region,
     end
   end
 
