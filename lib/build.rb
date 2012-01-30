@@ -2,7 +2,7 @@ require "state_machine"
 require "resque_jobs/deploy_build"
 
 class Build < Sequel::Model
-  @@regions = ["sandbox1", "sandbox2", "prod3", "prod4"]
+  @@regions = ["sandbox1", "sandbox2", "prod3"]
   def self.regions() @@regions end
 
   def initialize(values = {}, from_db = false)
