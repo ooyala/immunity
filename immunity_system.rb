@@ -30,6 +30,19 @@ class ImmunitySystem < Sinatra::Base
     save_build_status(build.id, params[:message], '', '')
   end
 
+  # Display helpers.
+  helpers do
+    # Takes in a state name like "deploy_failed" and translates to "Deploy failed".
+    def format_name(state)
+      state.gsub("_", " ").capitalize
+    end
+
+    # Produces a time in the form of "Fri 8:23pm 30s"
+    def format_time(time)
+      time.strftime("%a %l:%M%P %Ss")
+    end
+  end
+
   def save_build_status(build_id, stdout_text, stderr_text, message)
     build_status = BuildStatus.first(:build_id => build.id)
     if build_status.nil

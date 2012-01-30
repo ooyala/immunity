@@ -11,6 +11,7 @@ class Build < Sequel::Model
   end
 
   def readable_name() "Build #{id}" end
+
   # An abbreviated commit SHA instead of the usual long SHA.
   def short_commit() (commit || "")[0..6] end
 

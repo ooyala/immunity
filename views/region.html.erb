@@ -7,8 +7,9 @@
   <h2><%= region_name %></h2>
   <div class="buildTitle"><%= build.readable_name %> (commit <a href="#"><%= build.short_commit %></a>)</div>
   <div class="status">
-    <div class="title" class="deploying">Deploying</div>
-    <div class="date">Ran Fri 8:23pm 30s</div>
+    <div class="title" class="deploying"><%= format_name(build.state) %></div>
+    <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
+    <div class="date">Ran <%= format_time(build.updated_at) %></div>
   </div>
 
   <div class="nextUp">
