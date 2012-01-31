@@ -24,7 +24,7 @@
       <% all_builds.each do |row| %>
       <tr><td class="build"><%= row.readable_name %> 
         (commit <%= row.short_commit %>)</td><td>
-        <a href="/build_status/<%= row.id %>/<%= row.current_region %>">
+        <a href="/build_status/<%= row.id %>/<%= row.current_region %>" target="_blank">
           <%= format_name(row.state) %>
         </a></td></tr>
       <% end %>
