@@ -24,12 +24,14 @@ class ImmunitySystem < Sinatra::Base
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     # trigger testting
     build.fire_events(:begin_testing)
+    'ok'
   end
 
   post "/deploy_failed" do
     build = Build.first(:id => params[:build_id])
     build.fire_events(:deploy_failed)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    'ok'
   end
 
   post "/test_succeed" do
@@ -37,12 +39,14 @@ class ImmunitySystem < Sinatra::Base
     build.fire_events(:testing_succeeded)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     # trigger testting
+    'ok'
   end
 
   post "/test_failed" do
     build = Build.first(:id => params[:build_id])
-    build.fire_events(:testing_failed)
-    save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    #build.fire_events(:testing_failed)
+    #save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    'ok'
   end
 
   # Display helpers.
@@ -65,7 +69,7 @@ class ImmunitySystem < Sinatra::Base
     end
     build_status.stdout = stdout_text
     build_status.stderr = stderr_text
-    build_status.message = message
+    build_status.message = "#{build_status.message}\n#{message}"
     build_status.region = region
     build_status.save
   end
