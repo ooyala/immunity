@@ -18,14 +18,13 @@
     # TODO(philc): This is just a standin datamodel for regions and their builds.
     Build.regions.map do |region_name|
       # find latest build for this region
-      builds = Build.reverse_order(:id).filter(:current_region => region_name)
-      build = builds.first
-      if build.nil? && region_name == 'sandbox1'
-        build = latest_build
-      end
+      build = Build.reverse_order(:id).first(:current_region => region_name)
+      all_build_status = BuildStatus.reverse_order(:id).filter(:region => region_name)
+      build_status = all_build_status.first
       if build || latest_build
-        erb :"region.html", :locals => { :region_name => region_name, :build => build,
-                                         :all_builds => builds, :latest_build => latest_build }
+        erb :"region.html", :locals => { :region_name => region_name, :build => build, 
+                                         :build_status => build_status, :latest_build => latest_build,
+                                         :all_build_status => all_build_status,  }
       end
     end.join("\n")
    %>

@@ -1,16 +1,31 @@
 <%#
   Params:
   - region_name
-  - build: the current Build
+  - build: the current active build
+  - build_status: the latest build status for this region
+  - latest_build: latest build in the system
+  - all_build_status: build status history
  %>
+<%
+  build_name = build ? build.readable_name : 'N/A'
+  build_state = build ? format_name(build.state) : 'N/A'
+  build_time = build ? format_time(build.updated_at) : 'N/A'
+  active_commit = build ? build.short_commit : 'N/A'
+  if build && build_status && build.id < build_status.build_id
+	build_name = build_status.build.readable_name
+	build_state = build_status.message.to_s.strip.split("\n").last
+	build_time = format_time(build_status.updated_at)
+	active_commit = build_status.build.short_commit
+  end
+%>
 <div class="region">
   <h2><%= region_name %></h2>
-  <div class="buildTitle"><%= build ? build.readable_name : 'N/A' %> 
-   (commit <a href="javascript:void"><%= build ? build.short_commit : 'N/A' %></a>)</div>
+  <div class="buildTitle"><%=  %> 
+   (commit <a href="javascript:void"><%= active_commit %></a>)</div>
   <div class="status">
-    <div class="title" class="deploying"><%= build ? format_name(build.state) : 'N/A' %></div>
+    <div class="title" class="deploying"><%= build_state %></div>
     <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
-    <div class="date">Ran <%= build ? format_time(build.updated_at) : 'N/A' %></div>
+    <div class="date">Ran <%= build_time %></div>
   </div>
 
   <div class="nextUp">
@@ -21,11 +36,12 @@
   <h4>History</h4>
   <div class="history">
     <table>
-      <% all_builds.each do |row| %>
-      <tr><td class="build"><%= row.readable_name %> 
-        (commit <%= row.short_commit %>)</td><td>
-        <a href="/build_status/<%= row.id %>/<%= row.current_region %>" target="_blank">
-          <%= format_name(row.state) %>
+      <% all_build_status.each do |row| %>
+      <% next if row.build.nil? %>
+      <tr><td class="build"><%= row.build.readable_name %> 
+        (commit <%= row.build.short_commit %>)</td><td>
+        <a href="/build_status/<%= row.build.id %>/<%= row.region %>" target="_blank">
+          <%= row.message.to_s.strip.split("\n").last %>
         </a></td></tr>
       <% end %>
     </table>
