@@ -13,11 +13,6 @@ class DeployBuild
   @queue = :deply_builds
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
-  
-  REGION_TO_SERVER = {
-    "sandbox1" => "#{ENV['USER']}@127.0.0.1",
-    "sandbox2" => "root@ec2-107-22-34-118.compute-1.amazonaws.com"
-  }
 
   def self.perform(repo, commit, current_region, build_id)
     setup_logger("deply_builds.log")
@@ -35,7 +30,7 @@ class DeployBuild
   def self.deploy_commit(repo_name, commit, region)
     @logger.info "deploy the commit #{REPO_DIRS}: #{repo_name}, #{commit}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    results = self.run_command("cd #{project_repo} && ./run_deploy.sh #{REGION_TO_SERVER[region]}")
+    results = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region}")
     results
   end
 
