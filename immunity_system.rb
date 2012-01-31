@@ -22,6 +22,11 @@ class ImmunitySystem < Sinatra::Base
     redirect '/'
   end
 
+  get '/build_status/:build_id/:region' do
+    build_status = BuildStatus.first(:build_id => params[:build_id], :region => params[:region])
+    erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
+  end
+
   post "/deploy_succeed" do
     build = Build.first(:id => params[:build_id])
     build.fire_events(:deploy_succeeded)

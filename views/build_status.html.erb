@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Player immunity system -- Build Status</title>
+  <script src="https://github.com/ooyala/livecss/raw/master/livecss.js"></script>
+  <link rel="stylesheet" href="/styles.css" type="text/css" />
+</head>
+
+<!-- TODO(Rui): Style this page! -->
+
+<body>
+
+<div class="region">
+  <h2><%= region_name %></h2>
+  <div class="status">
+    <div class="date">Ran <%= build_status ? format_time(build_status.updated_at) : 'N/A' %></div>
+  </div>
+  <br>
+  <div class="output">
+    <h4>stdout Output</h4><br>
+    <textarea rows=20 cols=120><%=  build_status ? build_status.stdout : 'N/A' %></textarea><br>
+    <h4>stderr Output</h4><br>
+    <textarea rows=20 cols=120><%=  build_status ? build_status.stderr : 'N/A' %></textarea><br>
+  </div>
+
+  <div class="misc">
+    <h4>Other message</h4><br>
+
+    <pre><%=  build_status ? build_status.message : 'N/A' %></pre>
+  </div>
+
+</div>
+</body>
+</html>

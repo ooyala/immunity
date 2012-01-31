@@ -6,7 +6,7 @@
 <div class="region">
   <h2><%= region_name %></h2>
   <div class="buildTitle"><%= build ? build.readable_name : 'N/A' %> 
-   (commit <a href="#"><%= build ? build.short_commit : 'N/A' %></a>)</div>
+   (commit <a href="javascript:void"><%= build ? build.short_commit : 'N/A' %></a>)</div>
   <div class="status">
     <div class="title" class="deploying"><%= build ? format_name(build.state) : 'N/A' %></div>
     <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
@@ -24,7 +24,9 @@
       <% all_builds.each do |row| %>
       <tr><td class="build"><%= row.readable_name %> 
         (commit <%= row.short_commit %>)</td><td>
-        <a href="status"><%= format_name(row.state) %></a></td></tr>
+        <a href="/build_status/<%= row.id %>/<%= row.current_region %>">
+          <%= format_name(row.state) %>
+        </a></td></tr>
       <% end %>
     </table>
   </div>
