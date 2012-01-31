@@ -14,9 +14,11 @@ class RunTests
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
   
+  # todo, hard code the mapping here for now, need to change to use fez to start the task instead.
   REGION_TO_SERVER = {
     "sandbox1" => "#{ENV['USER']}@127.0.0.1",
-    "sandbox2" => "root@ec2-107-22-34-118.compute-1.amazonaws.com"
+    "sandbox2" => "#{ENV['USER']}@127.0.0.1",
+    "prod3" => "#{ENV['USER']}@127.0.0.1"
   }
 
   def self.perform(repo, current_region, build_id)
@@ -45,7 +47,7 @@ class RunTests
     # should be good for demo purpose for now.
     @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    remote_command = "/opt/#{repo_name}/run_tests.sh"
+    remote_command = "/opt/ooyala/#{region}/#{repo_name}/run_tests.sh"
     results = self.run_command("ssh #{REGION_TO_SERVER[region]} '#{remote_command}'")
     results
   end
