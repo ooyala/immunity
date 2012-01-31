@@ -5,23 +5,27 @@
  %>
 <div class="region">
   <h2><%= region_name %></h2>
-  <div class="buildTitle"><%= build.readable_name %> (commit <a href="#"><%= build.short_commit %></a>)</div>
+  <div class="buildTitle"><%= build ? build.readable_name : 'N/A' %> 
+   (commit <a href="#"><%= build ? build.short_commit : 'N/A' %></a>)</div>
   <div class="status">
-    <div class="title" class="deploying"><%= format_name(build.state) %></div>
+    <div class="title" class="deploying"><%= build ? format_name(build.state) : 'N/A' %></div>
     <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
-    <div class="date">Ran <%= format_time(build.updated_at) %></div>
+    <div class="date">Ran <%= build ? format_time(build.updated_at) : 'N/A' %></div>
   </div>
 
   <div class="nextUp">
     <h4>Next up</h4>
-    Build 230 (commit c3r8z8)
+    <%= latest_build.readable_name %> (Commit <%= latest_build.short_commit %>)
   </div>
 
   <h4>History</h4>
   <div class="history">
     <table>
-      <tr><td class="build">Build 228 (commit c8e714)</td><td><a href="status">Deploy failed</a></td></tr>
-      <tr><td class="build">Build 227 (commit 4dz70a)</td><td><a href="status">Tests passed</a></td></tr>
+      <% all_builds.each do |row| %>
+      <tr><td class="build"><%= row.readable_name %> 
+        (commit <%= row.short_commit %>)</td><td>
+        <a href="status"><%= format_name(row.state) %></a></td></tr>
+      <% end %>
     </table>
   </div>
 </div>

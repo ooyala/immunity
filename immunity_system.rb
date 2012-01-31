@@ -10,8 +10,8 @@ class ImmunitySystem < Sinatra::Base
 
   get "/" do
     # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
-    build = Build.first
-    erb :"index.html", :locals => { :build => build }
+    latest_build = Build.order(:id).last
+    erb :"index.html", :locals => { :latest_build => latest_build }
   end
 
   get "/styles.css" do
