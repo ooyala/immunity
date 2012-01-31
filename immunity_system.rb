@@ -77,7 +77,7 @@ class ImmunitySystem < Sinatra::Base
   def save_build_status(build_id, stdout_text, stderr_text, message, region)
     build_status = BuildStatus.first(:build_id => build_id, :region => region)
     if build_status.nil?
-      build_status = BuildStatus.new(:build_id => build_id)
+      build_status = BuildStatus.create(:build_id => build_id)
     end
     build_status.stdout = stdout_text
     build_status.stderr = stderr_text
