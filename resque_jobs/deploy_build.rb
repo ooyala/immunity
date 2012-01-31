@@ -47,5 +47,5 @@ class DeployBuild
 end
 
 if $0 == __FILE__
-  DeployBuild.perform('html5player', '7d1cca5b679959f0820d21d59e0c4371d025175d', 'sandbox1', 1)
+  DeployBuild.perform('html5player', 'a583b85dcb2d47932f9bf4a9a221fe4a8baccef8', 'sandbox1', 18)
 end

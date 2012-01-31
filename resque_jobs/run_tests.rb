@@ -33,7 +33,7 @@ class RunTests
       else
         puts "Test succeed.#{stdout_message}"
         RestClient.post 'http://localhost:3102/test_succeed', :build_id => build_id, :region => current_region,
-          :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed"
+          :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed -- #{Time.now}\n"
       end
     rescue Exception => e
       RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
