@@ -82,6 +82,10 @@ class Build < Sequel::Model
     after_transition any => :deploy_failed do
       notify_deploy_failed
     end
+
+    after_transition any => any do
+      self.save
+    end
   end
 
   # False if there's another Build already being deployed to the current region.
@@ -109,12 +113,12 @@ class Build < Sequel::Model
   end
 
   def schedule_deploy
-    puts "scheduling deploy to #{current_region}."
+    puts "scheduling deploy to #{current_region} #{state}"
     Resque.enqueue(DeployBuild, repo, commit, current_region, id)
   end
   
   def schedule_test
-    puts "Scheduling testing for #{current_region}"
+    puts "Scheduling testing for #{current_region} #{state}"
     Resque.enqueue(RunTests, repo, current_region, id)
   end
 

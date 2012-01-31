@@ -18,6 +18,10 @@ class ImmunitySystem < Sinatra::Base
     scss :styles
   end
 
+  get '/index.html' do
+    redirect '/'
+  end
+
   post "/deploy_succeed" do
     build = Build.first(:id => params[:build_id])
     build.fire_events(:deploy_succeeded)
