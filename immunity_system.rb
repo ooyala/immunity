@@ -47,7 +47,10 @@ class ImmunitySystem < Sinatra::Base
     build = Build.first(:id => params[:build_id])
     build.fire_events(:testing_succeeded)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
-    # trigger testting
+    # trigger deploy if no monitoring required.
+    if build.can_begin_deploy?
+      build.fire_events(:begin_deploy)
+    end
     'ok'
   end
 
