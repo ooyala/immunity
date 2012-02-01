@@ -25,7 +25,7 @@ class RunMonitor
     build = Build.first(:state => 'monitoring', :current_region => region)
     return if build.nil?
     build_id = build.id
-    setup_logger("run_tests.log")
+    setup_logger("run_monitor.log")
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
       total_latency = redis.get SERVER_TOTAL_LATENCY_KEY
