@@ -70,6 +70,7 @@ class ImmunitySystem < Sinatra::Base
 
     # Produces a time in the form of "Fri 8:23pm 30s"
     def format_time(time)
+      return '' if time.nil?
       time.strftime("%a %l:%M%P %Ss")
     end
   end
