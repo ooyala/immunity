@@ -1,9 +1,13 @@
 require "state_machine"
 require "resque_jobs/deploy_build"
 require "resque_jobs/run_tests"
+require "lib/build_status"
 require "timeout"
 
 class Build < Sequel::Model
+  one_to_many :build_statuses
+  add_association_dependencies :build_statuses => :destroy
+
   @@regions = ["sandbox1", "sandbox2", "prod3"]
   REPO_DIRS = File.expand_path("~/immunity_repos/")
   def self.regions() @@regions end
