@@ -33,12 +33,15 @@ class ImmunitySystem < Sinatra::Base
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     # trigger testting
     build.fire_events(:begin_testing)
+    # TODO (Rui) Figure out why we need to return a string here, rest_client is throw exception for nil
+    ''
   end
 
   post "/deploy_failed" do
     build = Build.first(:id => params[:build_id])
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     build.fire_events(:deploy_failed)
+    ''
   end
 
   post "/test_succeed" do
@@ -49,12 +52,14 @@ class ImmunitySystem < Sinatra::Base
     if build.can_begin_deploy?
       build.fire_events(:begin_deploy)
     end
+    ''
   end
 
   post "/test_failed" do
     build = Build.first(:id => params[:build_id])
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     build.fire_events(:testing_failed)
+    ''
   end
 
   # Display helpers.
