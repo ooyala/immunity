@@ -63,7 +63,7 @@ class Build < Sequel::Model
     end
 
     event :manual_deploy_confirmed do
-      transition :awaiting_confirmation => :deploying
+      transition :awaiting_confirmation => :awaiting_deploy
     end
 
     #
@@ -120,6 +120,11 @@ class Build < Sequel::Model
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
   def requires_monitoring?() self.current_region != "sandbox1" end
+
+  # The Build which is next in line for a given region.
+  def self.next_build_for_region(region_name)
+    Build.order(:id.desc).first(:current_region => region_name, :state => "awaiting_deploy")
+  end
 
   def enable_production_traffic_mirroring
     puts "enabling production traffic mirroring."
