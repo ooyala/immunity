@@ -13,13 +13,6 @@ class RunTests
   @queue = :run_tests
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
-  
-  # todo, hard code the mapping here for now, need to change to use fez to start the task instead.
-  REGION_TO_SERVER = {
-    "sandbox1" => "#{ENV['USER']}@127.0.0.1",
-    "sandbox2" => "#{ENV['USER']}@127.0.0.1",
-    "prod3" => "#{ENV['USER']}@127.0.0.1"
-  }
 
   def self.perform(repo, current_region, build_id)
     setup_logger("run_tests.log")
@@ -45,26 +38,9 @@ class RunTests
   end
 
   def self.start_tests(repo_name, region)
-    # TODO (Rui) For POC, run the remote ssh command for now, for real world work, we should make a JENKINS
-    # call to start the test and wait for the JENKIN callback for test results.
-    # should be good for demo purpose for now.
     @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    remote_command = "source ~/.profile; /opt/ooyala/#{region}/#{repo_name}/run_tests.sh"
-    # TODO(philc): We should do this with fezzik, so we don't have to build up the path ourself here.
-    results = self.run_command("ssh #{REGION_TO_SERVER[region]} '#{remote_command}'")
-    results
-  end
-
-
-  def self.run_command(command)
-    # use open4 instead of open3 here, because oepn3 does not like fezzik, when running fez deploy using
-    # open3, it pop error message which suggesting to use open4 instead.
-    pid, stdin, stdout, stderr = Open4::popen4 command
-    stdin.close
-    ignored, status = Process::waitpid2 pid
-    raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
-    [stdout.read.strip, stderr.read.strip]
+    result = self.run_command("cd #{project_repo} && ./run_tests.sh")
   end
 end
 

@@ -25,6 +25,17 @@ module JobsHelper
       end
       logger
     end
+
+    # Runs the command, raises an exception if it fails, and returns [stdout, stderr].
+    def self.run_command(command)
+      # use open4 instead of open3 here, because oepn3 does not like fezzik, when running fez deploy using
+      # open3, it pop error message which suggesting to use open4 instead.
+      pid, stdin, stdout, stderr = Open4::popen4 command
+      stdin.close
+      ignored, status = Process::waitpid2 pid
+      raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
+      [stdout.read.strip, stderr.read.strip]
+    end
   end
 end
 
