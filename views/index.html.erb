@@ -2,8 +2,9 @@
 <html>
 <head>
   <title>Player immunity system</title>
-  <meta http-equiv="refresh" content="8">
+  <!-- <meta http-equiv="refresh" content="10"> -->
   <script src="https://github.com/ooyala/livecss/raw/master/livecss.js"></script>
+  <script src="/js/jquery-1.7.min.js"></script>
   <link rel="stylesheet" href="/styles.css" type="text/css" />
 </head>
 
@@ -14,6 +15,19 @@
     <h1>Immunity System</h1>
   </header>
 
+  <script>
+    $(document).ready(function() {
+      $("button.confirm").click(function(event) {
+        jQuery.ajax({
+          type: "POST",
+          url: "/manual_deploy_confirmed",
+          data: "build_id=" + $(event.target).attr("build_id"),
+          success: function() { window.location.reload(); }
+        });
+      });
+    });
+  </script>
+
   <%=
     # TODO(philc): This is just a standin datamodel for regions and their builds.
     Build.regions.map do |region_name|
@@ -22,9 +36,13 @@
       all_build_status = BuildStatus.reverse_order(:id).filter(:region => region_name)
       build_status = all_build_status.first
       if build || latest_build
-        erb :"region.html", :locals => { :region_name => region_name, :build => build, 
-                                         :build_status => build_status, :latest_build => latest_build,
-                                         :all_build_status => all_build_status,  }
+        erb :"region.html", :locals => {
+          :next_build => Build.next_build_for_region(region_name),
+          :region_name => region_name,
+          :build => build,
+          :build_status => build_status,
+          :latest_build => latest_build,
+          :all_build_status => all_build_status,  }
       end
     end.join("\n")
    %>

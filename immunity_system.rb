@@ -62,7 +62,7 @@ class ImmunitySystem < Sinatra::Base
     build.fire_events(:testing_failed)
     ''
   end
-  
+
   post "/monitor_succeed" do
     build = Build.first(:id => params[:build_id])
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
@@ -75,6 +75,14 @@ class ImmunitySystem < Sinatra::Base
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     build.fire_events(:monitoring_failed)
     ''
+  end
+
+  # Manually confirms that a build is OK and begins deploying it to prod3.
+  # - build_id
+  post "/manual_deploy_confirmed" do
+    build = Build.first(:id => params[:build_id])
+    build.fire_events(:manual_deploy_confirmed)
+    build.fire_events(:begin_deploy)
   end
 
   # Display helpers.
