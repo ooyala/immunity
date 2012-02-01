@@ -24,7 +24,8 @@ class ImmunitySystem < Sinatra::Base
   end
 
   get "/build_status/:build_id/:region" do
-    build_status = BuildStatus.first(:build_id => params[:build_id], :region => params[:region])
+    build_status = BuildStatus.order(:id.desc).
+        first(:build_id => params[:build_id], :region => params[:region])
     erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
   end
 
