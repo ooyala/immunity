@@ -81,6 +81,7 @@ DEPENDENCIES
   pathological
   rack-test
   rake
+  redis
   rerun
   resque
   rest-client
