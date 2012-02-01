@@ -61,6 +61,20 @@ class ImmunitySystem < Sinatra::Base
     build.fire_events(:testing_failed)
     ''
   end
+  
+  post "/monitor_succeed" do
+    build = Build.first(:id => params[:build_id])
+    save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    build.fire_events(:monitoring_succeeded)
+    ''
+  end
+
+  post "/monitor_failed" do
+    build = Build.first(:id => params[:build_id])
+    save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    build.fire_events(:monitoring_failed)
+    ''
+  end
 
   # Display helpers.
   helpers do
