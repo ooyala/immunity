@@ -139,7 +139,7 @@ class Build < Sequel::Model
     puts "Beginning to mirror traffic."
     run_command_with_timeout("bundle exec fez #{from_region} log_forwarding:start",
         "html5player/api_server", 4)
-    run_command_with_timeout("bundle exec fez #{to_region} log_forwarding:start",
+    run_command_with_timeout("bundle exec fez #{to_region} log_replay:start",
         "html5player/api_server", 4)
   end
 
