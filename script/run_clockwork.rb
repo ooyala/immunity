@@ -3,6 +3,7 @@ require "bundler/setup"
 require "pathological"
 require "clockwork"
 require "resque_jobs/fetch_commits"
+require "resque_jobs/run_monitor"
 
 def clear_resque_queue(queue_name) Resque.redis.del("queue:#{queue_name}") end
 
@@ -17,11 +18,17 @@ Clockwork.handler do |job_name|
   when "fetch_commits"
     clear_resque_queue("fetch_commits")
     Resque.enqueue(FetchCommits)
+  when "monitoring"
+    clear_resque_queue("monitoring")
+    Resque.enqueue(RunMonitor)
   end
   STDOUT.flush
 end
 
 # NOTE(philc): This is set to 3 seconds for testing purposes. Ideally we would only pull 
 Clockwork.every(30.seconds, "fetch_commits")
+# NOTE(rui) for POC, check monitoring after 60 seconds, in real deploy we may consider longer time to 
+# gather enough data.
+Clockwork.every(60.seconds, "monitoring")
 
 Clockwork.run # This is a blocking call.

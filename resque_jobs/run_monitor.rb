@@ -11,7 +11,7 @@ require "redis"
 
 class RunMonitor
   include JobsHelper
-  @queue = :run_moitor
+  @queue = :monitoring
   
   # TODO (rui) hard code following for now, move to environment later.
   REDIS_SERVER = "localhost"
@@ -19,8 +19,11 @@ class RunMonitor
   SERVER_TOTAL_LATENCY_KEY = "sandbox2_latency"
   SERVER_REQUEST_COUNT = "sandbox2_request_count"
 
-  def self.perform(region, build_id)
+  def self.perform()
     # hard code region to sandbox2 for now
+    build = Build.first(:state => 'monitoring', :current_region => 'sandbox2')
+    return if build.nil?
+    build_id = build.id
     setup_logger("run_tests.log")
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
@@ -48,5 +51,5 @@ class RunMonitor
 end
 
 if $0 == __FILE__
-  RunMonitor.perform('sandbox2', 1)
+  RunMonitor.perform()
 end
