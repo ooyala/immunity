@@ -38,6 +38,7 @@ class RunTests
           :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed -- #{Time.now}\n"
       end
     rescue Exception => e
+      puts "Test with exception #{e.backtrace}"
       RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
           :stdout => "", :stderr => "#{e.message}\n#{e.backtrace}", :message => "test error"
     end
@@ -49,7 +50,7 @@ class RunTests
     # should be good for demo purpose for now.
     @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    remote_command = "/opt/ooyala/#{region}/#{repo_name}/run_tests.sh"
+    remote_command = "source ~/.profile; /opt/ooyala/#{region}/#{repo_name}/run_tests.sh"
     # TODO(philc): We should do this with fezzik, so we don't have to build up the path ourself here.
     results = self.run_command("ssh #{REGION_TO_SERVER[region]} '#{remote_command}'")
     results
