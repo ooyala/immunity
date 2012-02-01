@@ -28,7 +28,7 @@ class DeployBuild
   end
 
   def self.deploy_commit(repo_name, commit, region)
-    @logger.info "deploy the commit #{REPO_DIRS}: #{repo_name}, #{commit}, #{region}"
+    @logger.info "deploying the commit #{REPO_DIRS}: #{repo_name}, #{commit}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
     results = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region}")
     results

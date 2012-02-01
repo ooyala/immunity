@@ -1,9 +1,11 @@
 require "state_machine"
 require "resque_jobs/deploy_build"
 require "resque_jobs/run_tests"
+require "timeout"
 
 class Build < Sequel::Model
   @@regions = ["sandbox1", "sandbox2", "prod3"]
+  REPO_DIRS = File.expand_path("~/immunity_repos/")
   def self.regions() @@regions end
 
   def initialize(values = {}, from_db = false)
@@ -77,6 +79,12 @@ class Build < Sequel::Model
 
     after_transition any => :monitoring do
       enable_production_traffic_mirroring
+      # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
+      start_mirroring_traffic("prod3", current_region)
+    end
+
+    after_transition :monitoring => any do
+      stop_mirroring_traffic("prod3", current_region)
     end
 
     after_transition any => :deploy_failed do
@@ -96,6 +104,7 @@ class Build < Sequel::Model
     !blocked
   end
 
+  # The next region in the deploy chain after the current region.
   def next_region
     raise "This build has a region which is no longer defined" unless @@regions.include?(current_region)
     next_region = @@regions[@@regions.index(self.current_region) + 1]
@@ -116,14 +125,45 @@ class Build < Sequel::Model
     puts "scheduling deploy to #{current_region} #{state}"
     Resque.enqueue(DeployBuild, repo, commit, current_region, id)
   end
-  
+
   def schedule_test
     puts "Scheduling testing for #{current_region} #{state}"
     Resque.enqueue(RunTests, repo, current_region, id)
   end
 
+  def start_mirroring_traffic(from_region, to_region)
+    puts "Beginning to mirror traffic."
+    run_command_with_timeout("bundle exec fez #{from_region} log_forwarding:start",
+        "html5player/api_server", 4)
+    run_command_with_timeout("bundle exec fez #{to_region} log_forwarding:start",
+        "html5player/api_server", 4)
+  end
+
+  def stop_mirroring_traffic(from_region, to_region)
+    puts "Ceasing to mirror traffic."
+    run_command_with_timeout("bundle exec fez #{from_region} log_forwarding:stop",
+        "html5player/api_server", 4)
+    run_command_with_timeout("bundle exec fez #{to_region} log_replay:stop",
+        "html5player/api_server", 4)
+  end
+
+  # TODO(philc): We should issue these commands in a nonblocking fashion.
+  def run_command_with_timeout(command, project_path, timeout)
+    project_path = File.join(REPO_DIRS, project_path)
+    command = "BUNDLE_GEMFILE='' && cd #{project_path} && #{command}"
+    puts "Running #{command}"
+    Timeout.timeout(timeout) do
+      pid, stdin, stdout, stderr = Open4::popen4(command)
+      stdin.close
+      ignored, status = Process::waitpid2 pid
+      raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
+      [stdout.read.strip, stderr.read.strip]
+    end
+  end
+
   def notify_deploy_failed
     puts "deploy to #{current_region} failed."
+    # TODO(philc): Raise the alarm.
   end
 
 end

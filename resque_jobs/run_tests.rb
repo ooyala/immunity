@@ -50,6 +50,7 @@ class RunTests
     @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
     remote_command = "/opt/ooyala/#{region}/#{repo_name}/run_tests.sh"
+    # TODO(philc): We should do this with fezzik, so we don't have to build up the path ourself here.
     results = self.run_command("ssh #{REGION_TO_SERVER[region]} '#{remote_command}'")
     results
   end
