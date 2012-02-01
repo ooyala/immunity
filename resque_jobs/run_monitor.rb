@@ -28,7 +28,8 @@ class RunMonitor
     return if build.nil?
 
     # Monitor for at least 30 seconds.
-    return if build.updated_at < Time.now - 60
+    # TODO(philc): 
+    # return if build.updated_at < Time.now - 60
 
     build_id = build.id
     begin
