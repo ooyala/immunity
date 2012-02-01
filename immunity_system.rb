@@ -4,6 +4,7 @@ require "pathological"
 require "script/script_environment"
 require "sinatra"
 require "sass"
+require "bourbon"
 
 class ImmunitySystem < Sinatra::Base
   set :public_folder, "public"

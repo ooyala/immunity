@@ -1,3 +1,5 @@
+@import "lib/bourbon/bourbon";
+
 body {
   font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
   padding: 20px;
@@ -13,6 +15,16 @@ table { border-collapse: collapse; }
 header {
   h1 { font-weight: normal; }
   border-bottom: 1px solid #ccc;
+}
+
+button.green {
+  padding: 4px 7px;
+  @include linear-gradient(#07CE5C, darken(#07CE5C, 20%));
+  border-radius: 3px;
+  border: 2px solid darken(#07CE5C, 15%);
+  color: white;
+  text-shadow: 0px 1px 2px black;
+  font-weight: bold;
 }
 
 h2 {
@@ -32,8 +44,16 @@ $columnWidth: 300px;
   .status {
     .title { font-size: 20px; }
     float: left;
+    position: relative;
+    button.confirm {
+      font-size: 18px;
+    }
   }
 
+  .date {
+    font-size: 14px;
+    font-style: italic;
+  }
   .nextUp { clear: both; }
 
   h4 {

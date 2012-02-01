@@ -12,20 +12,25 @@
   build_time = build ? format_time(build.updated_at) : 'N/A'
   active_commit = build ? build.short_commit : 'N/A'
   if build && build_status && build.id < build_status.build_id
-	build_name = build_status.build.readable_name
-	build_state = build_status.message.to_s.strip.split("\n").last
-	build_time = format_time(build_status.updated_at)
-	active_commit = build_status.build.short_commit
+  build_name = build_status.build.readable_name
+  build_state = build_status.message.to_s.strip.split("\n").last
+  build_time = format_time(build_status.updated_at)
+  active_commit = build_status.build.short_commit
   end
 %>
 <div class="region">
   <h2><%= region_name %></h2>
-  <div class="buildTitle"><%=  %> 
-   (commit <a href="javascript:void"><%= active_commit %></a>)</div>
+  <div class="buildTitle">(commit <a href="javascript:void"><%= active_commit %></a>)</div>
   <div class="status">
-    <div class="title" class="deploying"><%= build_state %></div>
+    <div class="title" class="deploying">
+      <%= build_state %>
+      <%# TODO(philc): change this to be awaiting_confirmation %>
+      <% if build_state == "Awaiting confirmation" %>
+        <br/><button class="confirm green">Deploy to prod</button>
+      <% end %>
+    </div>
     <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
-    <div class="date">Ran <%= build_time %></div>
+    <div class="date">ran <%= build_time %></div>
   </div>
 
   <div class="nextUp">
@@ -38,7 +43,7 @@
     <table>
       <% all_build_status.each do |row| %>
       <% next if row.build.nil? %>
-      <tr><td class="build"><%= row.build.readable_name %> 
+      <tr><td class="build"><%= row.build.readable_name %>
         (commit <%= row.build.short_commit %>)</td><td>
         <a href="/build_status/<%= row.build.id %>/<%= row.region %>" target="_blank">
           <%= row.message.to_s.strip.split("\n").last %>
