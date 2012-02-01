@@ -25,9 +25,10 @@ class RunTests
     setup_logger("run_tests.log")
     begin
       stdout_message, stderr_message = self.start_tests(repo, current_region)
-      test_fail = /(\d+) failure/.match(stdout_message)
-      test_error = /(\d+) errors/.match(stdout_message)
-      if (test_fail && test_fail[0].to_i > 0) || (test_error && test_error[0].to_i > 0)
+      cleaned_output = stdout_message.gsub(/\D0 failure/, '').gsub(/\D0 error/, '')
+      test_fail = /(\d+) failure/.match(cleaned_output)
+      test_error = /(\d+) errors/.match(cleaned_output)
+      if test_fail && test_error
         puts "test failed here #{test_fail.inspect} #{stderr_message}"
         RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
           :stdout => stdout_message, :stderr => stderr_message, :message => "test fail"
