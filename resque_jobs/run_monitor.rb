@@ -36,7 +36,7 @@ class RunMonitor
       if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threthod.
         puts "monitor failed here"
         RestClient.post 'http://localhost:3102/monitor_failed', :build_id => build_id, :region => region,
-          :stdout => '', :stderr => '', :message => "monitor fail #{region}"
+          :stdout => '', :stderr => '', :message => "monitor fail -- #{average} #{region}"
       else
         puts "Monitor succeed"
         RestClient.post 'http://localhost:3102/monitor_succeed', :build_id => build_id, :region => region,
