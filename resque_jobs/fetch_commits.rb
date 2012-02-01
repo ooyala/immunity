@@ -33,7 +33,7 @@ class FetchCommits
     repos.each do |repo_name|
       logger.info "Fetching new commits from #{repo_name}."
       project_repo = File.join(REPO_DIRS, repo_name)
-      run_command("cd #{project_repo} && git fetch")
+      run_command("cd #{project_repo} && git pull")
       latest_commit = run_command("cd #{project_repo} && git rev-list --max-count=1 head").strip
       if Build.first(:commit => latest_commit, :repo => repo_name).nil?
         logger.info "#{repo_name} has new commits. The latest is now #{latest_commit}."
