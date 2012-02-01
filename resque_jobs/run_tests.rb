@@ -38,7 +38,7 @@ class RunTests
   end
 
   def self.start_tests(repo_name, region)
-    @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
+    @logger.info "Running tests for #{repo_name} #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
     result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region}")
   end
