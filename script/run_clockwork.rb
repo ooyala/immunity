@@ -29,6 +29,6 @@ end
 Clockwork.every(30.seconds, "fetch_commits")
 # NOTE(rui) for POC, check monitoring after 60 seconds, in real deploy we may consider longer time to 
 # gather enough data.
-Clockwork.every(60.seconds, "monitoring")
+Clockwork.every(20.seconds, "monitoring")
 
 Clockwork.run # This is a blocking call.
