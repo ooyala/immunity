@@ -12,8 +12,6 @@ class RunTests
   include JobsHelper
   @queue = :run_tests
 
-  REPO_DIRS = File.expand_path("~/immunity_repos/")
-
   def self.perform(repo, current_region, build_id)
     setup_logger("run_tests.log")
     begin
@@ -38,8 +36,7 @@ class RunTests
   end
 
   def self.start_tests(repo_name, region)
-    @logger.info "run test the  #{REPO_DIRS}: #{repo_name}, #{region}"
-    project_repo = File.join(REPO_DIRS, repo_name)
+    @logger.info "run test the: #{repo_name}, #{region}"
     result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region}")
   end
 end
