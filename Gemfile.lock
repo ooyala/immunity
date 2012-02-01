@@ -4,6 +4,8 @@ GEM
   remote: http://gems.sv2/
   remote: http://gems.us-east-1.ooyala.com:8080/
   specs:
+    bourbon (1.2.0)
+      sass (>= 3.1)
     clockwork (0.3.4)
     colorize (0.5.8)
     daemons (1.1.5)
@@ -70,6 +72,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bourbon
   clockwork
   foreman
   gamut
