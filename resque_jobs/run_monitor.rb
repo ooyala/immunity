@@ -21,7 +21,8 @@ class RunMonitor
 
   def self.perform()
     # hard code region to sandbox2 for now
-    build = Build.first(:state => 'monitoring', :current_region => 'sandbox2')
+    region = "sandbox2"
+    build = Build.first(:state => 'monitoring', :current_region => region)
     return if build.nil?
     build_id = build.id
     setup_logger("run_tests.log")
