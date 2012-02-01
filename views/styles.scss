@@ -17,6 +17,13 @@ header {
   border-bottom: 1px solid #ccc;
 }
 
+h2 {
+  border-bottom: 1px dashed #ccc;
+  margin-bottom: 6px;
+}
+
+.clear { clear: both }
+
 button.green {
   padding: 4px 7px;
   @include linear-gradient(#07CE5C, darken(#07CE5C, 20%));
@@ -25,11 +32,10 @@ button.green {
   color: white;
   text-shadow: 0px 1px 2px black;
   font-weight: bold;
-}
 
-h2 {
-  border-bottom: 1px dashed #ccc;
-  margin-bottom: 6px;
+  &:active {
+    @include linear-gradient(darken(#07CE5C, 22%), darken(#07CE5C, 10%));
+  }
 }
 
 $columnWidth: 300px;
@@ -54,7 +60,6 @@ $columnWidth: 300px;
     font-size: 14px;
     font-style: italic;
   }
-  .nextUp { clear: both; }
 
   h4 {
     font-size: 16px;
