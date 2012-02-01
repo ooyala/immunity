@@ -24,16 +24,16 @@ class RunTests
       if test_fail || test_error
         puts "test failed here #{test_fail.inspect} #{stderr_message}"
         RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
-          :stdout => stdout_message, :stderr => stderr_message, :message => "test fail"
+          :stdout => stdout_message, :stderr => stderr_message, :message => "test fail #{current_region}"
       else
         puts "Test succeed.#{stdout_message}"
         RestClient.post 'http://localhost:3102/test_succeed', :build_id => build_id, :region => current_region,
-          :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed -- #{Time.now}\n"
+          :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed (#{current_region})-- #{Time.now}\n"
       end
     rescue Exception => e
       puts "Test with exception #{e.backtrace}"
       RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
-          :stdout => "", :stderr => "#{e.message}\n#{e.backtrace}", :message => "test error"
+          :stdout => "", :stderr => "#{e.message}\n#{e.backtrace}", :message => "test error #{current_region}"
     end
   end
 
