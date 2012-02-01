@@ -18,11 +18,11 @@ class ImmunitySystem < Sinatra::Base
     scss :styles
   end
 
-  get '/index.html' do
+  get "/index.html" do
     redirect '/'
   end
 
-  get '/build_status/:build_id/:region' do
+  get "/build_status/:build_id/:region" do
     build_status = BuildStatus.first(:build_id => params[:build_id], :region => params[:region])
     erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
   end
@@ -33,32 +33,28 @@ class ImmunitySystem < Sinatra::Base
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     # trigger testting
     build.fire_events(:begin_testing)
-    'ok'
   end
 
   post "/deploy_failed" do
     build = Build.first(:id => params[:build_id])
-    build.fire_events(:deploy_failed)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
-    'ok'
+    build.fire_events(:deploy_failed)
   end
 
   post "/test_succeed" do
     build = Build.first(:id => params[:build_id])
-    build.fire_events(:testing_succeeded)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    build.fire_events(:testing_succeeded)
     # trigger deploy if no monitoring required.
     if build.can_begin_deploy?
       build.fire_events(:begin_deploy)
     end
-    'ok'
   end
 
   post "/test_failed" do
     build = Build.first(:id => params[:build_id])
-    #build.fire_events(:testing_failed)
-    #save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
-    'ok'
+    save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
+    build.fire_events(:testing_failed)
   end
 
   # Display helpers.
@@ -76,10 +72,7 @@ class ImmunitySystem < Sinatra::Base
   end
 
   def save_build_status(build_id, stdout_text, stderr_text, message, region)
-    build_status = BuildStatus.first(:build_id => build_id, :region => region)
-    if build_status.nil?
-      build_status = BuildStatus.create(:build_id => build_id)
-    end
+    build_status = BuildStatus.create(:build_id => build_id)
     build_status.stdout = stdout_text
     build_status.stderr = stderr_text
     build_status.message = "#{build_status.message}\n#{message}"
