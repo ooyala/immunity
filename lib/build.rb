@@ -175,4 +175,12 @@ class Build < Sequel::Model
     # TODO(philc): Raise the alarm.
   end
 
+  # A debugging method we use via ./script/console to make the system treat this build as a fresh new commit.
+  def treat_as_new_commit!
+    self.current_region = "sandbox1"
+    self.state = "awaiting_deploy"
+    self.save
+    self.fire_events(:begin_deploy)
+  end
+
 end
