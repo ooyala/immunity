@@ -33,7 +33,6 @@ class ImmunitySystem < Sinatra::Base
     build = Build.first(:id => params[:build_id])
     build.fire_events(:deploy_succeeded)
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
-    # trigger testting
     build.fire_events(:begin_testing)
     # TODO (Rui) Figure out why we need to return a string here, rest_client is throw exception for nil
     ''
@@ -50,10 +49,7 @@ class ImmunitySystem < Sinatra::Base
     build = Build.first(:id => params[:build_id])
     save_build_status(build.id, params[:stdout], params[:stderr], params[:message], params[:region])
     build.fire_events(:testing_succeeded)
-    # trigger deploy if no monitoring required.
-    if build.can_begin_deploy?
-      build.fire_events(:begin_deploy)
-    end
+    build.fire_events(:begin_deploy) if build.can_begin_deploy?
     ''
   end
 
@@ -95,7 +91,7 @@ class ImmunitySystem < Sinatra::Base
 
     # Produces a time in the form of "Fri 8:23pm 30s"
     def format_time(time)
-      return '' if time.nil?
+      return "" if time.nil?
       time.strftime("%a %l:%M%P %Ss")
     end
   end
