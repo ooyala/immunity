@@ -74,25 +74,24 @@ class Build < Sequel::Model
     end
 
     after_transition any => :deploying do
-      schedule_deploy()
+      schedule_deploy() unless is_test_build?
     end
 
     after_transition any => :testing do
-      schedule_test()
+      schedule_test() unless is_test_build?
     end
 
     after_transition any => :monitoring do
-      enable_production_traffic_mirroring
       # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
-      start_mirroring_traffic("prod3", current_region)
+      start_mirroring_traffic("prod3", current_region) unless is_test_build?
     end
 
     after_transition :monitoring => any do
-      stop_mirroring_traffic("prod3", current_region)
+      stop_mirroring_traffic("prod3", current_region) unless is_test_build?
     end
 
     after_transition any => :deploy_failed do
-      notify_deploy_failed
+      notify_deploy_failed unless is_test_build?
     end
 
     after_transition any => any do
@@ -112,22 +111,19 @@ class Build < Sequel::Model
   def next_region
     raise "This build has a region which is no longer defined" unless @@regions.include?(current_region)
     next_region = @@regions[@@regions.index(self.current_region) + 1]
+    next_region = "integration_test_#{next_region}" if current_region.include?("integration_test_")
     raise "Cannot pick a next region; this build's region is already the last." if next_region.nil?
     next_region
   end
 
-  def requires_manual_deploy?() self.current_region == "sandbox2" end
+  def requires_manual_deploy?() self.current_region.include?("sandbox2") end
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
-  def requires_monitoring?() self.current_region != "sandbox1" end
+  def requires_monitoring?() self.current_region.include?("sandbox1") end
 
   # The Build which is next in line for a given region.
   def self.next_build_for_region(region_name)
     Build.order(:id.desc).first(:current_region => region_name, :state => "awaiting_deploy")
-  end
-
-  def enable_production_traffic_mirroring
-    puts "enabling production traffic mirroring."
   end
 
   def schedule_deploy
@@ -182,5 +178,7 @@ class Build < Sequel::Model
     self.save
     self.fire_events(:begin_deploy)
   end
+
+  def is_test_build?() self.is_test_build end
 
 end
