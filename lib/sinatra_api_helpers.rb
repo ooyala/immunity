@@ -31,7 +31,6 @@ module SinatraApiHelpers
 
   def enforce_valid_json_body
     # Cap the size of the JSON request body; parsing a huge request will make our memory usage soar.
-    # TODO(philc): We may want to log this. It's a strange occurence.
     if request.env["CONTENT_LENGTH"].to_i > MAX_JSON_REQUEST_BODY_SIZE
       show_error 400, "Your JSON request body is too large."
     end

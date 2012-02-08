@@ -21,6 +21,9 @@ class ImmunitySystem < Sinatra::Base
     end
   end
 
+  #
+  # Views
+  #
   get "/" do
     # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
     latest_build = Build.order(:id).last
@@ -31,15 +34,15 @@ class ImmunitySystem < Sinatra::Base
     scss :styles
   end
 
-  get "/builds/:id" do
-    enforce_valid_build(params[:id]).to_json
+  get "/build_status/:build_id/:region" do
+    build_status = BuildStatus.order(:id.desc).
+        first(:build_id => params[:build_id], :region => params[:region])
+    erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
   end
 
-  delete "/builds/:id" do
-    build = enforce_valid_build(params[:id])
-    build.destroy
-    nil
-  end
+  #
+  # APIs
+  #
 
   # Create a new Build. Used by our integration tests.
   # - commit
@@ -47,15 +50,57 @@ class ImmunitySystem < Sinatra::Base
   # - repo
   post "/builds" do
     enforce_required_json_keys(:current_region, :commit, :repo)
-    Build.create(:current_region => json_body[:current_region],
-        :commit => json_body[:commit], :repo => json_body[:repo]).to_json
+    build = Build.create(:current_region => json_body[:current_region],
+        :is_test_build => json_body[:is_test_build], :commit => json_body[:commit],
+        :repo => json_body[:repo])
+    build.fire_events(:begin_deploy)
+    build.to_json
   end
 
-  get "/build_status/:build_id/:region" do
-    build_status = BuildStatus.order(:id.desc).
-        first(:build_id => params[:build_id], :region => params[:region])
-    erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
+  before "/builds/:id/?*" do
+    return if params[:id] == "test_builds"
+    @build = enforce_valid_build(params[:id])
   end
+
+  get "/builds/:id" do
+    @build.to_json
+  end
+
+  # Private, used only by our integration tests. This needs to come before the delete "/builds/:id" route.
+  delete "/builds/test_builds" do
+    Build.filter(:is_test_build => true).destroy
+    nil
+  end
+
+  delete "/builds/:id" do
+    @build.destroy
+    nil
+  end
+
+  # Mark a deploy as being finiished.
+  # - status: "success" or "failed"
+  # - log: detailed log information.
+  put "/builds/:id/deploy_status" do
+    enforce_required_json_keys(:status, :log)
+    show_error(400, "Invalid status.") unless ["success", "failed"].include?(json_body[:status])
+    message = (json_body[:status] == "success") ? "Deploy succeeded" : "Deploy failed."
+    build_status = BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log])
+    if json_body[:status] == "success"
+      @build.fire_events(:deploy_succeeded)
+      @build.fire_events(:begin_testing)
+    else
+      @build.fire_events(:deploy_failed)
+    end
+    build_status.to_json
+  end
+
+  # Mark a deploy as being finiished.
+  # - status: "success" or "failed"
+  # - log: detailed log information.
+  put "/builds/:id/test_status" do
+  end
+
+  # TODO(philc): Deprecate these routes below.
 
   post "/deploy_succeed" do
     build = Build.first(:id => params[:build_id])
