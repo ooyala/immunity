@@ -5,9 +5,21 @@ require "script/script_environment"
 require "sinatra"
 require "sass"
 require "bourbon"
+require "lib/sinatra_api_helpers"
 
 class ImmunitySystem < Sinatra::Base
+  include SinatraApiHelpers
+
   set :public_folder, "public"
+
+  set :show_exceptions, false
+
+  configure :development do
+    error(400) do
+      # Printing the response body for 400's is useful for debugging in development.
+      puts response.body
+    end
+  end
 
   get "/" do
     # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
@@ -17,6 +29,26 @@ class ImmunitySystem < Sinatra::Base
 
   get "/styles.css" do
     scss :styles
+  end
+
+  get "/builds/:id" do
+    enforce_valid_build(params[:id]).to_json
+  end
+
+  delete "/builds/:id" do
+    build = enforce_valid_build(params[:id])
+    build.destroy
+    nil
+  end
+
+  # Create a new Build. Used by our integration tests.
+  # - commit
+  # - current_region
+  # - repo
+  post "/builds" do
+    enforce_required_json_keys(:current_region, :commit, :repo)
+    Build.create(:current_region => json_body[:current_region],
+        :commit => json_body[:commit], :repo => json_body[:repo]).to_json
   end
 
   get "/build_status/:build_id/:region" do
@@ -99,6 +131,12 @@ class ImmunitySystem < Sinatra::Base
     build_status.message = "#{build_status.message}\n#{message}"
     build_status.region = region
     build_status.save
+  end
+
+  def enforce_valid_build(build_id)
+    build = Build.first(:id => build_id)
+    show_error(404, "No build exists with ID #{build_id}") unless build
+    build
   end
 
 end

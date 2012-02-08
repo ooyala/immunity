@@ -12,6 +12,17 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     ensure_reachable!(server)
   end
 
+  should "create and delete a build" do
+    post "/builds", {},
+        { :current_region => "sandbox1", :commit => "test_commit", :repo => "test_repo" }.to_json
+    assert_status 200
+    build_id = json_response["id"]
+    delete "/builds/#{build_id}"
+    assert_status 200
+    get "/builds/#{build_id}"
+    assert_status 404
+  end
+
   should "return a 200 for /" do
     get "/"
     assert_status 200
