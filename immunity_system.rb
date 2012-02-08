@@ -19,10 +19,6 @@ class ImmunitySystem < Sinatra::Base
     scss :styles
   end
 
-  get "/index.html" do
-    redirect '/'
-  end
-
   get "/build_status/:build_id/:region" do
     build_status = BuildStatus.order(:id.desc).
         first(:build_id => params[:build_id], :region => params[:region])
@@ -82,7 +78,7 @@ class ImmunitySystem < Sinatra::Base
     nil
   end
 
-  # Display helpers.
+  # Display helpers used by our views.
   helpers do
     # Takes in a state name like "deploy_failed" and translates to "Deploy failed".
     def format_name(state)
