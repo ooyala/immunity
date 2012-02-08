@@ -1,0 +1,6 @@
+require "bundler/setup"
+require "pathological"
+require "script/script_environment"
+require "scope"
+require "remote_http_testing"
+require "minitest/autorun"
