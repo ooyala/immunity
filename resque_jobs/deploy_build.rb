@@ -14,24 +14,27 @@ class DeployBuild
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
+  HOST = "http://localhost:3102"
+
   def self.perform(repo, commit, current_region, build_id)
     setup_logger("deply_builds.log")
     begin
-      stdout_message, stderr_message = self.deploy_commit(repo, commit, current_region)
-      RestClient.post 'http://localhost:3102/deploy_succeed', :build_id => build_id, :stdout => stdout_message,
-          :stderr => stderr_message, :region => current_region,
-      #self.run_command("curl /#{build_id} >/dev/null")
+      stdout = self.deploy_commit(repo, commit, current_region)
+      # TODO(philc): This will return success even if the deploy failed. Check the exit value of fez instead.
+      RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
+          { :status => "success", :log => stdout }.to_json
     rescue Exception => e
-      RestClient.post 'http://localhost:3102/deploy_failed', :build_id => build_id, :message => 'Deploy Error',
-          :stdout => '', :stderr => "#{e.message}\n#{e.backtrace}", :region => current_region,
+      message = "Failure running the deploy: #{e.message}\n#{e.backtrace}"
+      RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
+          { :status => "failed", :log => message }.to_json
     end
   end
 
   def self.deploy_commit(repo_name, commit, region)
     @logger.info "deploying the commit #{REPO_DIRS}: #{repo_name}, #{commit}, #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    results = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region}")
-    results
+    stdout, stderr = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region} 2>&1")
+    stdout
   end
 end
 
