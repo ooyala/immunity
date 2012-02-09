@@ -4,9 +4,8 @@ require "pathological"
 require "script/script_environment"
 require "resque_jobs/jobs_helper"
 require "resque"
-require "open4"
 require "fileutils"
-require 'rest_client'
+require "rest_client"
 
 class RunTests
   include JobsHelper

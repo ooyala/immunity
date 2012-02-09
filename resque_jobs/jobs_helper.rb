@@ -1,4 +1,5 @@
 require "logger"
+require "open4"
 
 module JobsHelper
   def self.included(klass)

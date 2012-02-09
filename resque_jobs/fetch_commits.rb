@@ -46,6 +46,7 @@ class FetchCommits
     end
   end
 
+  # TODO(philc): Get rid of this in favor of open4.
   def self.run_command(command)
     stdout, stderr, status = Open3.capture3(command)
     Open3.popen3(command) { |stdin, stdout, stderr| stdout_stream = stdout }
