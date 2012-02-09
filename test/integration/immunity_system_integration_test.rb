@@ -34,7 +34,7 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
 
   context "core workflow" do
     setup_once do
-      @@build_id = create_build()["id"]
+      @@build_id = create_build(:current_region => "integration_test_sandbox2")["id"]
     end
 
     should "progress the build from deploy to testing and then to the next region" do
@@ -43,8 +43,17 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       put "/builds/#{@@build_id}/deploy_status", {},
           { :status => "success", :log => "Deploy details..." }.to_json
       assert_status 200
-
       assert_equal "testing", get_build(@@build_id)["state"]
+
+      put "/builds/#{@@build_id}/testing_status", {},
+          { :status => "success", :log => "Testing details..." }.to_json
+      assert_status 200
+      assert_equal "monitoring", get_build(@@build_id)["state"]
+
+      put "/builds/#{@@build_id}/monitoring_status", {},
+          { :status => "success", :log => "Monitoring details..." }.to_json
+      assert_status 200
+      assert_equal "awaiting_confirmation", get_build(@@build_id)["state"]
 
       delete "/builds/#{@build_id}"
     end
@@ -59,9 +68,12 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     json_response
   end
 
-  def create_build
-    post "/builds", {}, { :current_region => "integration_test_sandbox1", :commit => "test_commit",
-        :repo => "integration_test_repo", :is_test_build => true }.to_json
+  def create_build(options = {})
+    options = {
+      :current_region => "integration_test_sandbox1", :commit => "test_commit",
+      :repo => "integration_test_repo", :is_test_build => true
+    }.merge(options)
+    post "/builds", {}, options.to_json
     assert_status 200
     json_response
   end

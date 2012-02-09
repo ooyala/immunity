@@ -40,6 +40,15 @@ class ImmunitySystem < Sinatra::Base
     erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
   end
 
+  # Manually confirms that a build is OK and begins deploying it to prod3.
+  # - build_id
+  post "/manual_deploy_confirmed" do
+    build = Build.first(:id => params[:build_id])
+    build.fire_events(:manual_deploy_confirmed)
+    build.fire_events(:begin_deploy)
+    nil
+  end
+
   #
   # APIs
   #
@@ -77,14 +86,12 @@ class ImmunitySystem < Sinatra::Base
     nil
   end
 
-  # Mark a deploy as being finiished.
-  # - status: "success" or "failed"
+  # Mark a deploy as finished.
+  # - status: "success" or "failed".
   # - log: detailed log information.
   put "/builds/:id/deploy_status" do
     enforce_required_json_keys(:status, :log)
-    show_error(400, "Invalid status.") unless ["success", "failed"].include?(json_body[:status])
-    message = (json_body[:status] == "success") ? "Deploy succeeded" : "Deploy failed."
-    build_status = BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log])
+    build_status = create_build_status_params("deploy", json_body[:status], json_body[:log])
     if json_body[:status] == "success"
       @build.fire_events(:deploy_succeeded)
       @build.fire_events(:begin_testing)
@@ -94,10 +101,33 @@ class ImmunitySystem < Sinatra::Base
     build_status.to_json
   end
 
-  # Mark a deploy as being finiished.
-  # - status: "success" or "failed"
+  # Mark testing as finiished.
+  # - status: "success" or "failed".
   # - log: detailed log information.
-  put "/builds/:id/test_status" do
+  put "/builds/:id/testing_status" do
+    enforce_required_json_keys(:status, :log)
+    build_status = create_build_status_params("testing", json_body[:status], json_body[:log])
+    if json_body[:status] == "success"
+      @build.fire_events(:testing_succeeded)
+      @build.fire_events(:begin_deploy)
+    else
+      @build.fire_events(:testing_failed)
+    end
+    build_status.to_json
+  end
+
+  # Mark monitoring as finiished.
+  # - status: "success" or "failed".
+  # - log: detailed log information.
+  put "/builds/:id/monitoring_status" do
+    enforce_required_json_keys(:status, :log)
+    build_status = create_build_status_params("monitoring", json_body[:status], json_body[:log])
+    if json_body[:status] == "success"
+      @build.fire_events(:monitoring_succeeded)
+    else
+      @build.fire_events(:monitoring_failed)
+    end
+    build_status.to_json
   end
 
   # TODO(philc): Deprecate these routes below.
@@ -146,15 +176,6 @@ class ImmunitySystem < Sinatra::Base
     nil
   end
 
-  # Manually confirms that a build is OK and begins deploying it to prod3.
-  # - build_id
-  post "/manual_deploy_confirmed" do
-    build = Build.first(:id => params[:build_id])
-    build.fire_events(:manual_deploy_confirmed)
-    build.fire_events(:begin_deploy)
-    nil
-  end
-
   # Display helpers used by our views.
   helpers do
     # Takes in a state name like "deploy_failed" and translates to "Deploy failed".
@@ -167,6 +188,14 @@ class ImmunitySystem < Sinatra::Base
       return "" if time.nil?
       time.strftime("%a %l:%M%P %Ss")
     end
+  end
+
+  # Creates a BuildStatus entry which records the state of the build.
+  # - stage: one of "deploy", "testing", "monitoring"
+  def create_build_status_params(stage, status, log)
+    show_error(400, "Invalid status.") unless ["success", "failed"].include?(status)
+    message = (status == "success") ? "#{stage} succeeded" : "#{stage} failed."
+    BuildStatus.create(:build_id => @build.id, :message => message, :stdout => log)
   end
 
   def save_build_status(build_id, stdout_text, stderr_text, message, region)

@@ -119,7 +119,7 @@ class Build < Sequel::Model
   def requires_manual_deploy?() self.current_region.include?("sandbox2") end
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
-  def requires_monitoring?() self.current_region.include?("sandbox1") end
+  def requires_monitoring?() !self.current_region.include?("sandbox1") end
 
   # The Build which is next in line for a given region.
   def self.next_build_for_region(region_name)
