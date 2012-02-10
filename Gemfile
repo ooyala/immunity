@@ -15,6 +15,7 @@ gem "open4"
 gem "rest-client" # For making HTTP REST calls.
 gem "redis"
 gem "bourbon" # Extra CSS mixins for Sass.
+gem "simple_memoize"
 
 group :dev do
   gem "wirble" # colorized irb script/console
