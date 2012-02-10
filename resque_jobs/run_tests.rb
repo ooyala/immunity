@@ -13,36 +13,39 @@ class RunTests
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
+  HOST = "http://localhost:3102"
+
   def self.perform(repo, current_region, build_id)
     setup_logger("run_tests.log")
     begin
-      stdout_message, stderr_message = self.start_tests(repo, current_region)
-      cleaned_output = stdout_message.gsub(/\D0 failure/, '').gsub(/\D0 error/, '')
-      test_fail = /(\d+) failure/.match(cleaned_output)
+      stdout, stderr = self.start_tests(repo, current_region)
+      cleaned_output = stdout.gsub(/\D0 failure/, "").gsub(/\D0 error/, "")
+      test_failure = /(\d+) failure/.match(cleaned_output)
       test_error = /(\d+) errors/.match(cleaned_output)
-      if test_fail || test_error
-        puts "test failed here #{test_fail.inspect} #{stderr_message}"
-        RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
-          :stdout => stdout_message, :stderr => stderr_message, :message => "test fail #{current_region}"
+      if test_failure || test_error
+        puts "Tests failed: #{(test_failure || test_error).inspect} #{stdout}"
+        RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
+            { :status => "failed", :log => stdout }.to_json
       else
-        puts "Test succeed.#{stdout_message}"
-        RestClient.post 'http://localhost:3102/test_succeed', :build_id => build_id, :region => current_region,
-          :stdout => stdout_message, :stderr => stderr_message, :message => "test succeed (#{current_region})-- #{Time.now}\n"
+        puts "Test succeeded. #{stdout}"
+        RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
+            { :status => "success", :log => stdout }.to_json
       end
     rescue Exception => e
-      puts "Test with exception #{e.backtrace}"
-      RestClient.post 'http://localhost:3102/test_failed', :build_id => build_id, :region => current_region,
-          :stdout => "", :stderr => "#{e.message}\n#{e.backtrace}", :message => "test error #{current_region}"
+      message = "Unable to run the tests: #{e.message}\n#{e.backtrace}"
+      puts message
+      RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
+          { :status => "failed", :log => message }.to_json
     end
   end
 
   def self.start_tests(repo_name, region)
     @logger.info "Running tests for #{repo_name} #{region}"
     project_repo = File.join(REPO_DIRS, repo_name)
-    result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region}")
+    result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region} 2>&1")
   end
 end
 
 if $0 == __FILE__
-  RunTests.perform('html5player', 'sandbox1', 1)
+  RunTests.perform("html5player", "sandbox1", 1)
 end
