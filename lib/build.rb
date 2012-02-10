@@ -8,16 +8,14 @@ class Build < Sequel::Model
   one_to_many :build_statuses
   add_association_dependencies :build_statuses => :destroy
 
-  @@regions = ["sandbox1", "sandbox2", "prod3"]
   REPO_DIRS = File.expand_path("~/immunity_repos/")
-  def self.regions() @@regions end
 
   def initialize(values = {}, from_db = false)
     super
-    self.current_region ||= @@regions.first
+    self.current_region ||= Region.region_names.first
   end
 
-  def readable_name() "Build #{id}" end
+  def readable_name() "Build #{id} (#{short_commit})" end
 
   # An abbreviated commit SHA instead of the usual long SHA.
   def short_commit() (commit || "")[0..6] end
@@ -109,8 +107,10 @@ class Build < Sequel::Model
 
   # The next region in the deploy chain after the current region.
   def next_region
-    raise "This build has a region which is no longer defined" unless @@regions.include?(current_region)
-    next_region = @@regions[@@regions.index(self.current_region) + 1]
+    unless Region.region_names.include?(current_region)
+      raise "This build has a region which is no longer defined"
+    end
+    next_region = Region.region_names[Region.region_names.index(self.current_region) + 1]
     next_region = "integration_test_#{next_region}" if current_region.include?("integration_test_")
     raise "Cannot pick a next region; this build's region is already the last." if next_region.nil?
     next_region
@@ -123,7 +123,6 @@ class Build < Sequel::Model
 
   # The Build which is next in line for a given region.
   def self.next_build_for_region(region_name)
-    Build.order(:id.desc).first(:current_region => region_name, :state => "awaiting_deploy")
   end
 
   def schedule_deploy

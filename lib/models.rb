@@ -17,3 +17,4 @@ Sequel::Model.plugin :timestamps
 
 require "lib/build"
 require "lib/build_status"
+require "lib/region"

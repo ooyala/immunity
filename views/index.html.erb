@@ -29,21 +29,8 @@
   </script>
 
   <%=
-    # TODO(philc): This is just a standin datamodel for regions and their builds.
-    Build.regions.map do |region_name|
-      # find latest build for this region
-      build = Build.reverse_order(:id).first(:current_region => region_name)
-      all_build_status = BuildStatus.reverse_order(:id).filter(:region => region_name)
-      build_status = all_build_status.first
-      if build || latest_build
-        erb :"region.html", :locals => {
-          :next_build => Build.next_build_for_region(region_name),
-          :region_name => region_name,
-          :build => build,
-          :build_status => build_status,
-          :latest_build => latest_build,
-          :all_build_status => all_build_status,  }
-      end
+    regions.map do |region|
+      erb :"region.html", :locals => { :region => region }
     end.join("\n")
    %>
 </body>

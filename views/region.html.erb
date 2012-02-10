@@ -1,60 +1,57 @@
 <%#
   Params:
   - region_name
-  - build: the current active build
-  - build_status: the latest build status for this region
-  - latest_build: latest build in the system
-  - all_build_status: build status history
  %>
 <%
-  build_name = build ? build.readable_name : 'N/A'
-  build_state = build ? format_name(build.state) : 'N/A'
-  build_time = build ? format_time(build.updated_at) : 'N/A'
-  active_commit = build ? build.short_commit : 'N/A'
-  if build && build_status && build.id < build_status.build_id
-  build_name = build_status.build.readable_name
-  build_state = build_status.message.to_s.strip.split("\n").last
-  build_time = format_time(build_status.updated_at)
-  active_commit = build_status.build.short_commit
-  end
+  current_build = region.current_build
+  next_build = region.next_build
 %>
+
 <div class="region">
-  <h2><%= region_name %></h2>
-  <div class="buildTitle">(commit <a href="javascript:void"><%= active_commit %></a>)</div>
-  <div class="status">
-    <div class="title" class="deploying">
-      <%= build_state %>
-      <%# TODO(philc): change this to be awaiting_confirmation %>
-      <% if build_state == "Awaiting confirmation" %>
-        <br/><button class="confirm green" build_id="<%= build.id %>">Deploy to prod</button>
-      <% end %>
-    </div>
-    <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
-    <div class="date">ran <%= build_time %></div>
+  <h2><%= region.name %></h2>
+  <div class="buildTitle">
+    <%= current_build ? current_build.readable_name : "None" %>
   </div>
+
+  <% if current_build %>
+    <div class="status">
+      <div class="title" class="deploying">
+        <%= format_name(current_build.state) %>
+        <% if current_build == "awaiting_confirmation" %>
+          <br/><button class="confirm green" build_id="<%= current_build.id %>">Deploy to prod</button>
+        <% end %>
+      </div>
+      <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
+      <div class="date">ran <%= format_time(current_build.updated_at) %></div>
+    </div>
+  <% end %>
 
   <div class="clear"></div>
 
   <div class="nextUp">
     <h4>Next up</h4>
     <% if next_build %>
-      <%= next_build.readable_name %> (Commit <%= next_build.short_commit %>)
+      <%= next_build.readable_name %>
     <% else %>
-      No pending builds.
+      None
     <% end %>
   </div>
 
-  <h4>History</h4>
+  <h4>Recent activity</h4>
   <div class="history">
-    <table>
-      <% all_build_status.each do |row| %>
-      <% next if row.build.nil? %>
-      <tr><td class="build"><%= row.build.readable_name %>
-        (commit <%= row.build.short_commit %>)</td><td>
-        <a href="/build_status/<%= row.build.id %>/<%= row.region %>" target="_blank">
-          <%= row.message.to_s.strip.split("\n").last %>
-        </a></td></tr>
-      <% end %>
-    </table>
+    <% if region.build_history.empty? %>
+      None
+    <% else %>
+      <table>
+        <% region.build_history.each do |build_status| %>
+          <tr>
+            <td class="build"><%= build_status.build.readable_name %></td>
+            <td>
+              <a href="/build_status/<%= build_status.id %>" target="_blank"><%= build_status.message %></a>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    <% end %>
   </div>
 </div>

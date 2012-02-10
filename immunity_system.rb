@@ -25,9 +25,10 @@ class ImmunitySystem < Sinatra::Base
   # Views
   #
   get "/" do
+    regions = Region.region_names.map { |name| Region.new(name) }
     # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
     latest_build = Build.order(:id).last
-    erb :"index.html", :locals => { :latest_build => latest_build }
+    erb :"index.html", :locals => { :regions => regions }
   end
 
   get "/styles.css" do
@@ -89,6 +90,7 @@ class ImmunitySystem < Sinatra::Base
   # Mark a deploy as finished.
   # - status: "success" or "failed".
   # - log: detailed log information.
+  # - region
   put "/builds/:id/deploy_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("deploy", json_body)
