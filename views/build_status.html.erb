@@ -3,17 +3,7 @@
   - build_status
  %>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Player immunity system -- Build Status</title>
-  <script src="https://github.com/ooyala/livecss/raw/master/livecss.js"></script>
-  <link rel="stylesheet" href="/styles.css" type="text/css" />
-</head>
-
 <!-- TODO(Rui): Style this page! -->
-
-<body>
 <div class="region">
   <h2><%= build_status.region %> - <%= build_status.message %></h2>
   <div class="status">
@@ -25,5 +15,3 @@
     <textarea rows=20 cols=120><%=  build_status.stdout %></textarea><br>
   </div>
 </div>
-</body>
-</html>
