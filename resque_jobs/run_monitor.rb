@@ -45,18 +45,18 @@ class RunMonitor
       if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threshold.
         puts "Monitoring failed."
         RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
-            { :status => "failed", :log => "latency is : #{average} @ #{region}" }.to_json
+            { :status => "failed", :log => "latency is : #{average} @ #{region}", :region => region }.to_json
       else
         puts "Monitoring succeeded."
         message = "average latency is #{average}"
         RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
-            { :status => "success", :log => message }.to_json
+            { :status => "success", :log => message, :region => region }.to_json
       end
     rescue Exception => e
       message = "#{e.message}\n#{e.backtrace}"
       puts "Monitor failed with error #{message}"
       RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
-          { :status => "failed", :log => message }.to_json
+          { :status => "failed", :log => message, :region => region }.to_json
     end
   end
 

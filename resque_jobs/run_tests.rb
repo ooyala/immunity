@@ -15,27 +15,27 @@ class RunTests
 
   HOST = "http://localhost:3102"
 
-  def self.perform(repo, current_region, build_id)
+  def self.perform(repo, region, build_id)
     setup_logger("run_tests.log")
     begin
-      stdout, stderr = self.start_tests(repo, current_region)
+      stdout, stderr = self.start_tests(repo, region)
       cleaned_output = stdout.gsub(/\D0 failure/, "").gsub(/\D0 error/, "")
       test_failure = /(\d+) failure/.match(cleaned_output)
       test_error = /(\d+) errors/.match(cleaned_output)
       if test_failure || test_error
         puts "Tests failed: #{(test_failure || test_error).inspect} #{stdout}"
         RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
-            { :status => "failed", :log => stdout }.to_json
+            { :status => "failed", :log => stdout, :region => region }.to_json
       else
         puts "Test succeeded. #{stdout}"
         RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
-            { :status => "success", :log => stdout }.to_json
+            { :status => "success", :log => stdout, :region => region }.to_json
       end
     rescue Exception => e
       message = "Unable to run the tests: #{e.message}\n#{e.backtrace}"
       puts message
       RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
-          { :status => "failed", :log => message }.to_json
+          { :status => "failed", :log => message, :region => regoin }.to_json
     end
   end
 

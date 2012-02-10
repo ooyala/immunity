@@ -15,17 +15,17 @@ class DeployBuild
 
   HOST = "http://localhost:3102"
 
-  def self.perform(repo, commit, current_region, build_id)
+  def self.perform(repo, commit, region, build_id)
     setup_logger("deply_builds.log")
     begin
-      stdout = self.deploy_commit(repo, commit, current_region)
+      stdout = self.deploy_commit(repo, commit, region)
       # TODO(philc): This will return success even if the deploy failed. Check the exit value of fez instead.
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
-          { :status => "success", :log => stdout }.to_json
+          { :status => "success", :log => stdout, :region => region }.to_json
     rescue Exception => e
       message = "Failure running the deploy: #{e.message}\n#{e.backtrace}"
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
-          { :status => "failed", :log => message }.to_json
+          { :status => "failed", :log => message, :region => region }.to_json
     end
   end
 

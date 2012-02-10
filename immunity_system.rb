@@ -90,8 +90,8 @@ class ImmunitySystem < Sinatra::Base
   # - status: "success" or "failed".
   # - log: detailed log information.
   put "/builds/:id/deploy_status" do
-    enforce_required_json_keys(:status, :log)
-    build_status = create_build_status_params("deploy", json_body[:status], json_body[:log])
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status("deploy", json_body)
     if json_body[:status] == "success"
       @build.fire_events(:deploy_succeeded)
       @build.fire_events(:begin_testing)
@@ -104,9 +104,10 @@ class ImmunitySystem < Sinatra::Base
   # Mark testing as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
+  # - region
   put "/builds/:id/testing_status" do
-    enforce_required_json_keys(:status, :log)
-    build_status = create_build_status_params("testing", json_body[:status], json_body[:log])
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status("testing", json_body)
     if json_body[:status] == "success"
       @build.fire_events(:testing_succeeded)
       @build.fire_events(:begin_deploy)
@@ -119,9 +120,10 @@ class ImmunitySystem < Sinatra::Base
   # Mark monitoring as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
+  # - region
   put "/builds/:id/monitoring_status" do
-    enforce_required_json_keys(:status, :log)
-    build_status = create_build_status_params("monitoring", json_body[:status], json_body[:log])
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status("monitoring", json_body)
     if json_body[:status] == "success"
       @build.fire_events(:monitoring_succeeded)
     else
@@ -146,10 +148,12 @@ class ImmunitySystem < Sinatra::Base
 
   # Creates a BuildStatus entry which records the state of the build.
   # - stage: one of "deploy", "testing", "monitoring"
-  def create_build_status_params(stage, status, log)
+  def create_build_status(stage, json_body)
+    status = json_body[:status]
     show_error(400, "Invalid status.") unless ["success", "failed"].include?(status)
     message = (status == "success") ? "#{stage} succeeded" : "#{stage} failed."
-    BuildStatus.create(:build_id => @build.id, :message => message, :stdout => log)
+    BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log],
+        :region => json_body[:region])
   end
 
   def save_build_status(build_id, stdout_text, stderr_text, message, region)
