@@ -1,3 +1,3 @@
-class BuildStatus < Sequel::Model(:build_status)
+class BuildStatus < Sequel::Model
   many_to_one :build
 end
