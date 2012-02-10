@@ -176,6 +176,7 @@ class Build < Sequel::Model
     self.current_region = "sandbox1"
     self.state = "awaiting_deploy"
     self.save
+    self.build_statuses_dataset.destroy
     self.fire_events(:begin_deploy)
   end
 
