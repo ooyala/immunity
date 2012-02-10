@@ -18,12 +18,14 @@ class RunMonitor
   SERVER_TOTAL_LATENCY_KEY = "sandbox2_latency"
   SERVER_REQUEST_COUNT = "sandbox2_request_count"
 
+  HOST = "http://localhost:3102"
+
   def self.perform()
     setup_logger("run_monitor.log")
 
     # hard code region to sandbox2 for now
     region = "sandbox2"
-    build = Build.first(:state => 'monitoring', :current_region => region)
+    build = Build.first(:state => "monitoring", :current_region => region)
     return if build.nil?
 
     # Monitor for at least 30 seconds.
@@ -31,6 +33,8 @@ class RunMonitor
     # return if build.updated_at < Time.now - 60
 
     build_id = build.id
+    # TODO(philc): This is just a toy comparison which needs to be reimplemented this to be more
+    # complete and informative.
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
       total_latency = redis.get SERVER_TOTAL_LATENCY_KEY
@@ -38,20 +42,21 @@ class RunMonitor
       average = request_count.to_i > 0 ? total_latency.to_i / request_count.to_i : 0
       puts "Average performace is #{average}"
 
-      if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threthod.
-        puts "monitor failed here"
-        RestClient.post 'http://localhost:3102/monitor_failed', :build_id => build_id, :region => region,
-          :stdout => '', :stderr => '', :message => "monitor fail -- latency is : #{average} @ #{region}"
+      if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threshold.
+        puts "Monitoring failed."
+        RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+            { :status => "failed", :log => "latency is : #{average} @ #{region}" }.to_json
       else
-        puts "Monitor succeed"
-        RestClient.post 'http://localhost:3102/monitor_succeed', :build_id => build_id, :region => region,
-          :stdout => "average latency is #{average}", :stderr => '',
-          :message => "monitor succeed latency: #{average} (#{region})-- #{Time.now}\n"
+        puts "Monitoring succeeded."
+        message = "average latency is #{average}"
+        RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+            { :status => "success", :log => message }.to_json
       end
     rescue Exception => e
-      puts "Monitor with error #{e.inspect}\n#{e.message}\n#{e.backtrace}"
-      RestClient.post 'http://localhost:3102/monitor_failed', :build_id => build_id, :region => region,
-          :stdout => "", :stderr => "#{e.message}\n#{e.backtrace}", :message => "monitor error #{region}"
+      message = "#{e.message}\n#{e.backtrace}"
+      puts "Monitor failed with error #{message}"
+      RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+          { :status => "failed", :log => message }.to_json
     end
   end
 
