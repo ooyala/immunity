@@ -35,10 +35,10 @@ class ImmunitySystem < Sinatra::Base
     scss :styles
   end
 
-  get "/build_status/:build_id/:region" do
-    build_status = BuildStatus.order(:id.desc).
-        first(:build_id => params[:build_id], :region => params[:region])
-    erb :"build_status.html", :locals => { :build_status => build_status, :region_name => params[:region] }
+  get "/build_status/:id" do
+    build_status = BuildStatus.first(:id => params[:id])
+    show_error(404) unless build_status
+    erb :"build_status.html", :locals => { :build_status => build_status }
   end
 
   # Manually confirms that a build is OK and begins deploying it to prod3.
