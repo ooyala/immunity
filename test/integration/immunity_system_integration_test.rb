@@ -34,24 +34,25 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
 
   context "core workflow" do
     setup_once do
-      @@build_id = create_build(:current_region => "integration_test_sandbox2")["id"]
+      @@region = "integration_test_sandbox2"
+      @@build_id = create_build(:current_region => @@region)["id"]
     end
 
     should "progress the build from deploy to testing and then to the next region" do
       assert_equal "deploying", get_build(@@build_id)["state"]
 
       put "/builds/#{@@build_id}/deploy_status", {},
-          { :status => "success", :log => "Deploy details..." }.to_json
+          { :status => "success", :log => "Deploy details...", :region => @@region }.to_json
       assert_status 200
       assert_equal "testing", get_build(@@build_id)["state"]
 
       put "/builds/#{@@build_id}/testing_status", {},
-          { :status => "success", :log => "Testing details..." }.to_json
+          { :status => "success", :log => "Testing details...", :region => @@region }.to_json
       assert_status 200
       assert_equal "monitoring", get_build(@@build_id)["state"]
 
       put "/builds/#{@@build_id}/monitoring_status", {},
-          { :status => "success", :log => "Monitoring details..." }.to_json
+          { :status => "success", :log => "Monitoring details...", :region => @@region }.to_json
       assert_status 200
       assert_equal "awaiting_confirmation", get_build(@@build_id)["state"]
 
