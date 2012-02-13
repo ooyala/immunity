@@ -121,10 +121,6 @@ class Build < Sequel::Model
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
   def requires_monitoring?() !self.current_region.include?("sandbox1") end
 
-  # The Build which is next in line for a given region.
-  def self.next_build_for_region(region_name)
-  end
-
   def schedule_deploy
     puts "scheduling deploy to #{current_region} #{state}"
     Resque.enqueue(DeployBuild, repo, commit, current_region, id)
