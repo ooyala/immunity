@@ -11,8 +11,10 @@ class Region
     self.name = name
   end
 
-  def current_build
-    Build.reverse_order(:id).filter("state <> 'awaiting_deploy'").first(:current_region => self.name)
+  # The build in this region which is currently in progress.
+  def in_progress_build
+    active_states = ["deploying", "testing", "monitoring", "awaiting_confirmation"]
+    Build.reverse_order(:id).filter(:state => active_states).first(:current_region => self.name)
   end
 
   def next_build
@@ -23,5 +25,5 @@ class Region
     BuildStatus.order(:id.desc).filter(:region => self.name).limit(10).all
   end
 
-  memoize :next_build, :current_build, :build_history
+  memoize :next_build, :in_progress_build, :build_history
 end

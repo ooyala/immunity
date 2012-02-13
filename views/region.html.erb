@@ -3,26 +3,35 @@
   - region_name
  %>
 <%
-  current_build = region.current_build
+  in_progress_build = region.in_progress_build
+  most_recent_build_status = region.build_history.first
   next_build = region.next_build
+  has_current_build = in_progress_build || most_recent_build_status
+  build_name = has_current_build ? (in_progress_build || most_recent_build_status.build).readable_name : nil
+  build_date = has_current_build ? (in_progress_build || most_recent_build_status.build).updated_at : nil
 %>
 
 <div class="region">
   <h2><%= region.name %></h2>
   <div class="buildTitle">
-    <%= current_build ? current_build.readable_name : "None" %>
+    <%= build_name || "None" %>
   </div>
 
-  <% if current_build %>
+  <% if in_progress_build || most_recent_build_status %>
     <div class="status">
       <div class="title" class="deploying">
-        <%= format_name(current_build.state) %>
-        <% if current_build == "awaiting_confirmation" %>
-          <br/><button class="confirm green" build_id="<%= current_build.id %>">Deploy to prod</button>
+        <% if in_progress_build %>
+          <%= format_name(in_progress_build.state) %>
+          <% if in_progress_build.state == "awaiting_confirmation" %>
+            <br/><button class="confirm green" build_id="<%= in_progress_build.id %>">Deploy to prod</button>
+          <% end %>
+        <% elsif most_recent_build_status %>
+          <a href="/build_status/<%= most_recent_build_status.id %>" target="_blank">
+            <%= most_recent_build_status.message %></a>
         <% end %>
       </div>
       <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>
-      <div class="date">ran <%= format_time(current_build.updated_at) %></div>
+      <div class="date">ran <%= format_time(build_date) %></div>
     </div>
   <% end %>
 
