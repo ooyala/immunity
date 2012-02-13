@@ -22,10 +22,12 @@ class RunTests
       cleaned_output = stdout.gsub(/\D0 failure/, "").gsub(/\D0 error/, "")
       test_failure = /(\d+) failure/.match(cleaned_output)
       test_error = /(\d+) errors/.match(cleaned_output)
+
       if test_failure || test_error
+        test_output = "Test Failures\n" + (test_fail ? test_fail.inspect : '') + "\nTest Errors\n" + (test_error ? test_error.inspect : '')
         puts "Tests failed: #{(test_failure || test_error).inspect} #{stdout}"
         RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
-            { :status => "failed", :log => stdout, :region => region }.to_json
+            { :status => "failed", :log => stdout, :stderr => stderr_message + test_output, :region => region }.to_json
       else
         puts "Test succeeded. #{stdout}"
         RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
@@ -35,7 +37,8 @@ class RunTests
       message = "Unable to run the tests: #{e.message}\n#{e.backtrace}"
       puts message
       RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
-          { :status => "failed", :log => message, :region => regoin }.to_json
+          { :status => "failed", :log => message, :region => region,
+            :stderr => "#Error Message:\n#{e.message}\nBacktrace\n#{e.backtrace.join("\n")}" }.to_json
     end
   end
 

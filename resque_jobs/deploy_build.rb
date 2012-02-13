@@ -23,7 +23,7 @@ class DeployBuild
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
           { :status => "success", :log => stdout, :region => region }.to_json
     rescue Exception => e
-      message = "Failure running the deploy: #{e.message}\n#{e.backtrace}"
+      message = "Failure running the deploy: #{e.message}\n#{e.backtrace.join("\n")}"
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
           { :status => "failed", :log => message, :region => region }.to_json
     end
