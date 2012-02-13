@@ -33,8 +33,8 @@ class RunTests
         RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
             { :status => "success", :log => stdout, :region => region }.to_json
       end
-    rescue Exception => e
-      message = "Unable to run the tests: #{e.message}\n#{e.backtrace}"
+    rescue Exception => error
+      message = "Unable to run the tests: #{error.detailed_to_s}"
       puts message
       RestClient.put "#{HOST}/builds/#{build_id}/testing_status",
           { :status => "failed", :log => message, :region => region,

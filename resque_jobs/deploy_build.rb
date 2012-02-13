@@ -22,8 +22,8 @@ class DeployBuild
       # TODO(philc): This will return success even if the deploy failed. Check the exit value of fez instead.
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
           { :status => "success", :log => stdout, :region => region }.to_json
-    rescue Exception => e
-      message = "Failure running the deploy: #{e.message}\n#{e.backtrace.join("\n")}"
+    rescue Exception => error
+      message = "Failure running the deploy: #{error.detailed_to_s}"
       RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
           { :status => "failed", :log => message, :region => region }.to_json
     end

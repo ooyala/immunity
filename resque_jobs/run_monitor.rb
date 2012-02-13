@@ -52,8 +52,8 @@ class RunMonitor
         RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
             { :status => "success", :log => message, :region => region }.to_json
       end
-    rescue Exception => e
-      message = "#{e.message}\n#{e.backtrace}"
+    rescue Exception => error
+      message = error.detailed_to_s
       puts "Monitor failed with error #{message}"
       RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
           { :status => "failed", :log => message, :region => region }.to_json
