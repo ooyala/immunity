@@ -1,4 +1,5 @@
 require "bundler/setup"
+require "lib/ruby_extensions"
 require "config/environment"
 require "lib/models"
 require "lib/backtrace_cleaner"
