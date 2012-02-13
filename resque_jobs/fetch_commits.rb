@@ -33,7 +33,9 @@ class FetchCommits
     repos.each do |repo_name|
       logger.info "Fetching new commits from #{repo_name}."
       project_repo = File.join(REPO_DIRS, repo_name)
-      run_command("cd #{project_repo} && git pull")
+      # We perform a "git reset --hard head" in case we've accidentally modified the build during a deploy,
+      # e.g. by running `bundle install` which can modify Gemfile.lock.
+      run_command("cd #{project_repo} && git reset --hard head && git pull")
       # TODO(philc): We must also pull this repo, because html5player has symlinks into it. This will soon
       # change.
       run_command("cd #{File.join(REPO_DIRS, 'playertools')} && git pull")
