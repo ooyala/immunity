@@ -81,11 +81,22 @@ class Build < Sequel::Model
 
     after_transition any => :monitoring do
       # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
-      start_mirroring_traffic("prod3", current_region) unless is_test_build?
+      begin
+        start_mirroring_traffic("prod3", current_region) unless is_test_build?
+      rescue => error
+        log_transition_failure("monitoring failed", error.detailed_to_s)
+        self.fire_events(:monitoring_failed)
+      end
     end
 
     after_transition :monitoring => any do
-      stop_mirroring_traffic("prod3", current_region) unless is_test_build?
+      # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
+      begin
+        stop_mirroring_traffic("prod3", current_region) unless is_test_build?
+      rescue => error
+        log_transition_failure("monitoring failed", error.detailed_to_s)
+        self.fire_events(:monitoring_failed) unless state == "monitoring_failed"
+      end
     end
 
     after_transition any => :deploy_failed do
@@ -159,6 +170,12 @@ class Build < Sequel::Model
       raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
       [stdout.read.strip, stderr.read.strip]
     end
+  end
+
+  # Creates a BuildStatus for this build, with the given details.
+  def log_transition_failure(message, further_details)
+    BuildStatus.create(:build_id => self.id, :region => self.current_region,
+        :message => message, :stdout => further_details)
   end
 
   def notify_deploy_failed
