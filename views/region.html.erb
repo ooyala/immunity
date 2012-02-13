@@ -45,8 +45,15 @@
       <table>
         <% region.build_history.each do |build_status| %>
           <tr>
-            <td class="build"><%= build_status.build.readable_name %></td>
-            <td>
+            <td class="time">
+              <span title="<%= build_status.created_at %>">
+                <%= build_status.created_at.strftime("%l:%M%P") %>
+              </span>
+            </td>
+            <td class="build">
+              <%= build_status.build.readable_name %>
+            </td>
+            <td class="status">
               <a href="/build_status/<%= build_status.id %>" target="_blank"><%= build_status.message %></a>
             </td>
           </tr>

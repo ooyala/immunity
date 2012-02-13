@@ -71,6 +71,9 @@ $columnWidth: 300px;
   .history {
     font-size: 14px;
     color: #666;
-    td.build { width: $columnWidth; }
+    $timeWidth: 70px;
+    td.time{ padding-right: 6px; }
+    td.build { width: 100%; }
+    td.status { width: $columnWidth; }
   }
 }
