@@ -83,3 +83,17 @@ $columnWidth: 300px;
     td.status { width: $columnWidth; }
   }
 }
+
+/*
+ * Styles dashboard.
+ */
+.metricsTable {
+  width: 300px;
+  margin: 20px 0;
+  h2 {
+    font-weight: normal;
+    margin-bottom: 3px;
+  }
+  td.message { width: 100%; }
+  td.time { white-space: nowrap; }
+}

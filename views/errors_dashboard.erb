@@ -1,0 +1,12 @@
+
+<div class="metricsTable">
+  <h2>HTML5player errors</h2>
+  <table>
+    <% errors.each_with_index do |error, i| %>
+      <tr>
+        <td class="message"><%= error %></td>
+        <td class="time"><%= format_time(Time.now - (i * 10) - (rand * 20).to_i)  %></td>
+      </tr>
+    <% end %>
+  </table>
+</div>

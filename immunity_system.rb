@@ -50,6 +50,11 @@ class ImmunitySystem < Sinatra::Base
     nil
   end
 
+  get "/errors_dashboard/:product_id" do
+    errors = ["error 1", "error 2", "error 3"]
+    erb :errors_dashboard, :locals => { :errors => errors }
+  end
+
   #
   # APIs
   #
