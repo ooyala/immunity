@@ -178,10 +178,15 @@ class Build < Sequel::Model
   # monitoring. It was put here for demo reasons.
   def monitoring_stats
     redis = Redis.new :host => "localhost"
+    today = "2012-02-14" # TODO(philc): 
     request_count = redis.get("#{current_region}_request_count").to_i
+    errors = redis.get("html5player:error_count:#{today}").to_i
+    error_rate = errors / request_count.to_f * 100
     {
       :request_count => request_count,
-      :average_latency => redis.get("#{current_region}_latency").to_i / (request_count || 1)
+      :average_latency => redis.get("#{current_region}_latency").to_i / (request_count || 1),
+      :error_count => errors,
+      :error_rate => error_rate
     }
   end
 

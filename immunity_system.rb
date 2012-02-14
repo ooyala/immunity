@@ -151,6 +151,11 @@ class ImmunitySystem < Sinatra::Base
       return "" if time.nil?
       time.strftime("%a %l:%M%P %Ss")
     end
+
+    def trim_decimals(i, decimal_places)
+      multiplier = 10**decimal_places
+      (i * multiplier).floor / multiplier.to_f
+    end
   end
 
   # Creates a BuildStatus entry which records the state of the build.
