@@ -24,10 +24,21 @@
           <%= format_name(in_progress_build.state) %>
           <% if in_progress_build.state == "awaiting_confirmation" %>
             <br/><button class="confirm green" build_id="<%= in_progress_build.id %>">Deploy to prod</button>
+          <% elsif in_progress_build.state == "monitoring_failed" %>
+            <div class="monitoringMetrics">
+              Requests: <%= build.monitoring_stats[:request_count] %><br/>
+              Average latency: <%= build.monitoring_stats[:average_latency] %>ms<br/>
+            </div>
           <% end %>
         <% elsif most_recent_build_status %>
           <a href="/build_status/<%= most_recent_build_status.id %>" target="_blank">
             <%= most_recent_build_status.message %></a>
+          <% if (most_recent_build_status.build.state == "monitoring_failed") %>
+            <div class="monitoringMetrics">
+              Requests: <%= most_recent_build_status.build.monitoring_stats[:request_count] %><br/>
+              Average latency: <%= most_recent_build_status.build.monitoring_stats[:average_latency] %>ms<br/>
+            </div>
+          <% end %>
         <% end %>
       </div>
       <%# TODO(philc): I'm not sure if updated_at is the correct timestamp here to use. %>

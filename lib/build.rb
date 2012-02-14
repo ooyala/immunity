@@ -174,6 +174,17 @@ class Build < Sequel::Model
     end
   end
 
+  # TODO(philc): Rip this out of here and put it into a separate object which records the summary data about
+  # monitoring. It was put here for demo reasons.
+  def monitoring_stats
+    redis = Redis.new :host => "localhost"
+    request_count = redis.get("sandbox1_request_count").to_i
+    {
+      :request_count => request_count,
+      :average_latency => redis.get("sandbox1_latency").to_i / (request_count || 1)
+    }
+  end
+
   # Creates a BuildStatus for this build, with the given details.
   def log_transition_failure(message, further_details)
     BuildStatus.create(:build_id => self.id, :region => self.current_region,

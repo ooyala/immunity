@@ -3,6 +3,7 @@
 body {
   font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
   padding: 20px;
+  font-size: 14px;
 }
 
 * {
@@ -53,6 +54,11 @@ $columnWidth: 300px;
     position: relative;
     button.confirm {
       font-size: 18px;
+    }
+
+    .monitoringMetrics {
+      margin: 8px 0;
+      font-size: 14px;
     }
   }
 
