@@ -2,25 +2,14 @@
 require "bundler/setup"
 require "pathological"
 require "script/script_environment"
-require "redis"
-require "redis/list"
-require "redis/sorted_set"
-require "redis/objects"
 require "sinatra"
 require "sass"
 require "bourbon"
 require "lib/sinatra_api_helpers"
-require "config/environment"
 
 class ImmunitySystem < Sinatra::Base
   include SinatraApiHelpers
 
-  # Arbitrary number; might consider increasing since it aggregates across all deploy ins
-  MAX_NUM_SUCCESSES = 10
-  MAX_NUM_RECENT_ERRORS = 30
-  # 14 days expiration period
-  REDIS_LOG_EXPIRATION = 60*60*24*14
-  
   set :public_folder, "public"
 
   set :show_exceptions, false
@@ -105,8 +94,6 @@ class ImmunitySystem < Sinatra::Base
   put "/builds/:id/deploy_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("deploy", json_body)
-    log_current_state(params[:id], nil, json_body[:log], json_body[:region], json_body[:status], 'building')
-
     if json_body[:status] == "success"
       @build.fire_events(:deploy_succeeded)
       @build.fire_events(:begin_testing)
@@ -123,10 +110,6 @@ class ImmunitySystem < Sinatra::Base
   put "/builds/:id/testing_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("testing", json_body)
-
-    stderr_from_test = json_body[:stderr] ? json_body[:stderr] : nil
-    log_current_state(params[:id], stderr_from_test, json_body[:log], json_body[:region], json_body[:status], 'testing')
-
     if json_body[:status] == "success"
       @build.fire_events(:testing_succeeded)
       @build.fire_events(:begin_deploy)
@@ -143,8 +126,6 @@ class ImmunitySystem < Sinatra::Base
   put "/builds/:id/monitoring_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("monitoring", json_body)
-
-    log_current_state(params[:id], nil, json_body[:log], json_body[:region], json_body[:status], 'monitoring')
     if json_body[:status] == "success"
       @build.fire_events(:monitoring_succeeded)
     else
@@ -177,38 +158,13 @@ class ImmunitySystem < Sinatra::Base
         :region => json_body[:region])
   end
 
-  def log_current_state(build_id, stderr_text=nil, message, region, status_type, operating_mode)
-    # Save to redis so that we can pull from it when we setup our dashboard
-    # status_type = [deploy_failed, deploy_success, test_failed, test_success, monitor_failed, monitor_success]
-    day = Time.now.gmtime
-    # TODO(snir): Need to figure out a centralized redis cache for the machines that will be deployed to
-    redis = Redis.new(:host => REDIS_HOST, :port => REDIS_PORT)
-    if (status_type.index("failed"))
-      # TODO (snir): Probably want to add more fields to the info hash. For now, this is all we have...
-      info_hash = {
-        :build_id => build_id,
-        :stderr_text => stderr_text,
-        :message => message,
-        :region => region,
-        :timestamp => Time.now.gmtime.to_i
-      }
-      recent_errors = Redis::List.new("#{operating_mode}:#{region}:failed", redis, :max_length => MAX_NUM_RECENT_ERRORS, :marshal => true)
-      recent_errors.unshift(info_hash)
-      error_frequency = Redis::SortedSet.new("#{operating_mode}:#{region}:failed:#{day.strftime("%Y-%m-%d")}", redis)
-      error_frequency.expire(day.to_i + REDIS_LOG_EXPIRATION)
-      error_frequency.increment("#{operating_mode}:#{region}:failed")
-    # Useful to keep track of successful builds/tests/monitors to get a diff once one fails
-    # Definitely don't need as much context though with the one expception being the monitor state
-    else
-      info_hash = {
-        :build_id => build_id,
-        :message => message,
-        :region => region,
-        :timestamp => Time.now.gmtime.to_i
-      }
-      recent_successes = Redis::List.new("#{operating_mode}:#{region}:success", redis, :max_length => MAX_NUM_SUCCESSES, :marshal => true)
-      recent_successes.unshift(info_hash)
-    end
+  def save_build_status(build_id, stdout_text, stderr_text, message, region)
+    build_status = BuildStatus.create(:build_id => build_id)
+    build_status.stdout = stdout_text
+    build_status.stderr = stderr_text
+    build_status.message = "#{build_status.message}\n#{message}"
+    build_status.region = region
+    build_status.save
   end
 
   def enforce_valid_build(build_id)

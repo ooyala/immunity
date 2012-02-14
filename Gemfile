@@ -14,7 +14,6 @@ gem "resque" # For running background jobs.
 gem "open4"
 gem "rest-client" # For making HTTP REST calls.
 gem "redis"
-gem "redis-objects"
 gem "bourbon" # Extra CSS mixins for Sass.
 gem "simple_memoize"
 
