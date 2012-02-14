@@ -178,10 +178,10 @@ class Build < Sequel::Model
   # monitoring. It was put here for demo reasons.
   def monitoring_stats
     redis = Redis.new :host => "localhost"
-    request_count = redis.get("sandbox1_request_count").to_i
+    request_count = redis.get("#{current_region}_request_count").to_i
     {
       :request_count => request_count,
-      :average_latency => redis.get("sandbox1_latency").to_i / (request_count || 1)
+      :average_latency => redis.get("#{current_region}_latency").to_i / (request_count || 1)
     }
   end
 
