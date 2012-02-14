@@ -8,6 +8,8 @@ class Build < Sequel::Model
   one_to_many :build_statuses
   add_association_dependencies :build_statuses => :destroy
 
+  MONITORING_PERIOD_DURATION = 60 # seconds.
+
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
   def initialize(values = {}, from_db = false)

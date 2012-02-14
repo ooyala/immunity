@@ -23,16 +23,12 @@ class RunMonitor
   def self.perform()
     setup_logger("run_monitor.log")
 
-    # hard code region to sandbox2 for now
-    region = "sandbox2"
-    build = Build.first(:state => "monitoring", :current_region => region)
+    monitoring_period = Time.now - Build::MONITORING_PERIOD_DURATION
+    build = Build.filter(:state => "monitoring").filter("updated_at < ?", monitoring_period).first
     return if build.nil?
 
-    # Monitor for at least 30 seconds.
-    # TODO(philc): 
-    # return if build.updated_at < Time.now - 60
+    region = build.region
 
-    build_id = build.id
     # TODO(philc): This is just a toy comparison which needs to be reimplemented this to be more
     # complete and informative.
     begin
@@ -44,18 +40,18 @@ class RunMonitor
 
       if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threshold.
         puts "Monitoring failed."
-        RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+        RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
             { :status => "failed", :log => "latency is : #{average} @ #{region}", :region => region }.to_json
       else
         puts "Monitoring succeeded."
         message = "average latency is #{average}"
-        RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+        RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
             { :status => "success", :log => message, :region => region }.to_json
       end
     rescue Exception => error
       message = error.detailed_to_s
       puts "Monitor failed with error #{message}"
-      RestClient.put "#{HOST}/builds/#{build_id}/monitoring_status",
+      RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
           { :status => "failed", :log => message, :region => region }.to_json
     end
   end
