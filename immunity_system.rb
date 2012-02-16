@@ -6,6 +6,8 @@ require "sinatra"
 require "sass"
 require "bourbon"
 require "lib/sinatra_api_helpers"
+require "redis_log_reader"
+require "config/environment"
 
 class ImmunitySystem < Sinatra::Base
   include SinatraApiHelpers
@@ -51,7 +53,8 @@ class ImmunitySystem < Sinatra::Base
   end
 
   get "/errors_dashboard/:product_id" do
-    errors = ["error 1", "error 2", "error 3"]
+    reader = RedisLogReader.new(REDIS_HOST, REDIS_PORT)
+    errors = reader.recent_errors('html5player')
     erb :errors_dashboard, :locals => { :errors => errors }
   end
 
@@ -115,6 +118,7 @@ class ImmunitySystem < Sinatra::Base
   put "/builds/:id/testing_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("testing", json_body)
+
     if json_body[:status] == "success"
       @build.fire_events(:testing_succeeded)
       @build.fire_events(:begin_deploy)
@@ -131,6 +135,7 @@ class ImmunitySystem < Sinatra::Base
   put "/builds/:id/monitoring_status" do
     enforce_required_json_keys(:status, :log, :region)
     build_status = create_build_status("monitoring", json_body)
+
     if json_body[:status] == "success"
       @build.fire_events(:monitoring_succeeded)
     else
