@@ -10,4 +10,7 @@ namespace :test do
     task.libs << "test"
     task.test_files = FileList["test/integration/*"]
   end
+
 end
+
+task :test => "test:integrations"
