@@ -8,7 +8,7 @@ class Build < Sequel::Model
   one_to_many :build_statuses
   add_association_dependencies :build_statuses => :destroy
 
-  MONITORING_PERIOD_DURATION = 60 # seconds.
+  MONITORING_PERIOD_DURATION = 45 # seconds.
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
@@ -176,15 +176,16 @@ class Build < Sequel::Model
 
   # TODO(philc): Rip this out of here and put it into a separate object which records the summary data about
   # monitoring. It was put here for demo reasons.
-  def monitoring_stats
+  def monitoring_stats(region = self.current_region)
     redis = Redis.new :host => "localhost"
     today = "2012-02-14" # TODO(philc): 
-    request_count = redis.get("#{current_region}_request_count").to_i
+    request_count = redis.get("#{region}_request_count").to_i
     errors = redis.get("html5player:error_count:#{today}").to_i
-    error_rate = errors / request_count.to_f * 100
+    error_rate = (request_count == 0) ? 0 : (errors / request_count.to_f * 100)
+    latency = (request_count == 0) ? 0 : redis.get("#{region}_latency").to_i / request_count
     {
       :request_count => request_count,
-      :average_latency => redis.get("#{current_region}_latency").to_i / (request_count || 1),
+      :average_latency => latency,
       :error_count => errors,
       :error_rate => error_rate
     }
