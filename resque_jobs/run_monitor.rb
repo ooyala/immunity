@@ -15,8 +15,8 @@ class RunMonitor
   # TODO (rui) hard code following for now, move to environment later.
   REDIS_SERVER = "localhost"
   REDIS_PORT = 6379
-  SERVER_TOTAL_LATENCY_KEY = "sandbox2_latency"
-  SERVER_REQUEST_COUNT = "sandbox2_request_count"
+  SERVER_TOTAL_LATENCY_KEY = "sandbox1_latency"
+  SERVER_REQUEST_COUNT = "sandbox1_request_count"
 
   HOST = "http://localhost:3102"
 
@@ -26,19 +26,19 @@ class RunMonitor
     monitoring_period = Time.now - Build::MONITORING_PERIOD_DURATION
     build = Build.filter(:state => "monitoring").filter("updated_at < ?", monitoring_period).first
     return if build.nil?
-
-    region = build.region
+    region = build.current_region
 
     # TODO(philc): This is just a toy comparison which needs to be reimplemented this to be more
     # complete and informative.
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
-      total_latency = redis.get SERVER_TOTAL_LATENCY_KEY
-      request_count = redis.get SERVER_REQUEST_COUNT
-      average = request_count.to_i > 0 ? total_latency.to_i / request_count.to_i : 0
+      total_latency = redis.get(SERVER_TOTAL_LATENCY_KEY).to_i
+      request_count = redis.get(SERVER_REQUEST_COUNT).to_i
+      request_count = 1 if request_count == 0
+      average = total_latency / request_count
       puts "Average performace is #{average}"
 
-      if average > 5000 # 5 seconds for POC purpose, we can easily add sleep to exceed the monitor threshold.
+      if average > 1000 # 1 second for POC purpose, we can easily add sleep to exceed the monitor threshold.
         puts "Monitoring failed."
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
             { :status => "failed", :log => "latency is : #{average} @ #{region}", :region => region }.to_json
