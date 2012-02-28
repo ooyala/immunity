@@ -1,0 +1,11 @@
+<%#
+  # Shows basic formatting for a build's monitoring metrics.
+  # Params:
+  # - build
+%>
+<div class="monitoringMetrics">
+  Requests: <%= build.monitoring_stats[:request_count] %><br/>
+  Average latency: <%= build.monitoring_stats[:average_latency] %>ms<br/>
+  Errors: <%= build.monitoring_stats[:error_count] %><br/>
+  Error rate: <%= trim_decimals(build.monitoring_stats[:error_rate], 2) %>%<br/>
+</div>
