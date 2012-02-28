@@ -24,13 +24,19 @@
           <%= format_name(in_progress_build.state) %>
           <% if in_progress_build.state == "awaiting_confirmation" %>
             <br/><button class="confirm green" build_id="<%= in_progress_build.id %>">Deploy to prod</button>
+            <div class="monitoringMetrics">
+              Requests: <%= in_progress_build.monitoring_stats[:request_count] %><br/>
+              Average latency: <%= in_progress_build.monitoring_stats[:average_latency] %>ms<br/>
+              Errors: <%= in_progress_build.monitoring_stats[:error_count] %><br/>
+              Error rate: <%= trim_decimals(in_progress_build.monitoring_stats[:error_rate], 2) %>%<br/>
+            </div>
           <% elsif in_progress_build.state == "monitoring_failed" %>
             <%# TODO(philc): this errors view needs to be refactored along with datamodel changed %>
             <div class="monitoringMetrics">
-              Requests: <%= build.monitoring_stats[:request_count] %><br/>
-              Average latency: <%= build.monitoring_stats[:average_latency] %>ms<br/>
-              Errors: <%= build.monitoring_stats[:error_count] %><br/>
-              Error rate: <%= trim_decimals(build.monitoring_stats[:error_rate], 2) %>%<br/>
+              Requests: <%= in_progress_build.monitoring_stats[:request_count] %><br/>
+              Average latency: <%= in_progress_build.monitoring_stats[:average_latency] %>ms<br/>
+              Errors: <%= in_progress_build.monitoring_stats[:error_count] %><br/>
+              Error rate: <%= trim_decimals(in_progress_build.monitoring_stats[:error_rate], 2) %>%<br/>
             </div>
           <% end %>
         <% elsif most_recent_build_status %>
