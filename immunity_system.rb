@@ -2,7 +2,8 @@
 require "bundler/setup"
 require "pathological"
 require "script/script_environment"
-require "sinatra"
+require "sinatra/base"
+require "sinatra/reloader"
 require "sass"
 require "bourbon"
 require "lib/sinatra_api_helpers"
@@ -25,6 +26,9 @@ class ImmunitySystem < Sinatra::Base
       # Printing the response body for 400's is useful for debugging in development.
       puts response.body
     end
+    register Sinatra::Reloader
+    also_reload "lib/*.rb"
+    also_reload "config/*.rb"
   end
 
   #
