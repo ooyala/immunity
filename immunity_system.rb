@@ -13,8 +13,12 @@ class ImmunitySystem < Sinatra::Base
   include SinatraApiHelpers
 
   set :public_folder, "public"
-
   set :show_exceptions, false
+
+  error(500) do
+    content_type "text/plain"
+    env["sinatra.error"].detailed_to_s
+  end
 
   configure :development do
     error(400) do
