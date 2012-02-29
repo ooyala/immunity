@@ -17,6 +17,7 @@ gem "redis"
 gem "bourbon" # Extra CSS mixins for Sass.
 gem "simple_memoize"
 gem "redis-objects"
+gem "sinatra-contrib" # For Sinatra::Reloader
 
 group :dev do
   gem "wirble" # colorized irb script/console
