@@ -29,6 +29,7 @@ class ImmunitySystem < Sinatra::Base
     register Sinatra::Reloader
     also_reload "lib/*.rb"
     also_reload "config/*.rb"
+    also_reload "resque_jobs/*.rb"
   end
 
   #
@@ -79,7 +80,15 @@ class ImmunitySystem < Sinatra::Base
     build = Build.create(:current_region => json_body[:current_region],
         :is_test_build => json_body[:is_test_build], :commit => json_body[:commit],
         :repo => json_body[:repo])
-    build.fire_events(:begin_deploy)
+    # NOTE(philc): you can set the state of a build without jumping through the state machine. Use this
+    # carefully. It's useful for integration tests, but we may want to remove it if these APIs are ever
+    # used by anyone else.
+    if json_body[:state]
+      build.state = json_body[:state]
+      build.save
+    else
+      build.fire_events(:begin_deploy)
+    end
     build.to_json
   end
 

@@ -20,39 +20,44 @@ class RunMonitor
 
   HOST = "http://localhost:3102"
 
-  def self.perform()
+  LATENCY_UPPER_BOUND = 1000
+
+  # The arguments hash is used by our integration tests to test each main logic path.
+  # - region: the region to search for builds which have completed monitoring.
+  def self.perform(arguments = {})
     setup_logger("run_monitor.log")
 
-    monitoring_period = Time.now - Build::MONITORING_PERIOD_DURATION
-    build = Build.filter(:state => "monitoring").filter("updated_at < ?", monitoring_period).first
+    monitoring_period = Time.now -
+        (arguments["monitoring_period_duration"] || Build::MONITORING_PERIOD_DURATION)
+    build_dataset = Build.filter(:state => "monitoring").filter("updated_at <= ?", monitoring_period)
+    build_dataset = build_dataset.filter(:current_region => arguments["region"]) if arguments["region"]
+    build = build_dataset.first
     return if build.nil?
-    region = build.current_region
+
+    latency_upper_bound = arguments["latency_upper_bound"] || LATENCY_UPPER_BOUND
 
     # TODO(philc): This is just a toy comparison which needs to be reimplemented this to be more
     # complete and informative.
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
-      total_latency = redis.get(SERVER_TOTAL_LATENCY_KEY).to_i
-      request_count = redis.get(SERVER_REQUEST_COUNT).to_i
-      request_count = 1 if request_count == 0
-      average = total_latency / request_count
-      puts "Average performace is #{average}"
+      stats = build.monitoring_stats
 
-      if average > 1000 # 1 second for POC purpose, we can easily add sleep to exceed the monitor threshold.
-        puts "Monitoring failed."
+      if stats[:average_latency] > latency_upper_bound
+        message = "Monitoring failed. Latency is #{stats[:average]}."
+        puts message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-            { :status => "failed", :log => "latency is : #{average} @ #{region}", :region => region }.to_json
+            { :status => "failed", :log => message, :region => build.current_region }.to_json
       else
-        puts "Monitoring succeeded."
-        message = "average latency is #{average}"
+        message = "Monitoring succeeded."
+        puts message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-            { :status => "success", :log => message, :region => region }.to_json
+            { :status => "success", :log => message, :region => build.current_region }.to_json
       end
     rescue Exception => error
       message = error.detailed_to_s
-      puts "Monitor failed with error #{message}"
+      puts "Monitor failed with error #{message}."
       RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-          { :status => "failed", :log => message, :region => region }.to_json
+          { :status => "failed", :log => message, :region => build.current_region }.to_json
     end
   end
 

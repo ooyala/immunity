@@ -4,6 +4,7 @@ require "test/integration_test_helper"
 
 class ImmunitySystemIntegrationTest < Scope::TestCase
   include RemoteHttpTesting
+  include BuildRequestHelpers
 
   # This is the server all HTTP requests will be made to.
   def server() "http://localhost:3102" end
@@ -60,22 +61,4 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     end
   end
 
-  #
-  # Convenience methods for making requests for builds.
-  #
-  def get_build(id)
-    get "/builds/#{id}"
-    assert_status 200
-    json_response
-  end
-
-  def create_build(options = {})
-    options = {
-      :current_region => "integration_test_sandbox1", :commit => "test_commit",
-      :repo => "integration_test_repo", :is_test_build => true
-    }.merge(options)
-    post "/builds", {}, options.to_json
-    assert_status 200
-    json_response
-  end
 end
