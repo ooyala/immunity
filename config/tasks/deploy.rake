@@ -16,6 +16,14 @@ namespace :fezzik do
     run "mkdir -p #{deploy_to}/releases"
   end
 
+  desc "after the app code has been rsynced, sets up the app's dependencies, like gems"
+  remote_task :setup_app do
+    puts "Setting up server dependencies. This will take 4-8m if it's the first time it's being run."
+    # This PATH addition is required for Vagrant, which has Ruby installed, but it's not in the default PATH.
+    run "cd #{release_path} && PATH=$PATH:/opt/ruby/bin script/system_setup.rb"
+    run_with_env "cd #{release_path} && bundle install"
+  end
+
   desc "rsyncs the project from its staging location to each destination server"
   remote_task :push => [:stage, :setup] do
     puts "pushing to #{target_host}:#{release_path}"
@@ -32,7 +40,7 @@ namespace :fezzik do
   desc "runs the executable in project/bin"
   remote_task :start do
     puts "starting from #{Fezzik::Util.capture_output { run "readlink #{current_path}" }}"
-    run "cd #{current_path} && (source config/environment.sh || true) && ./bin/run_app.sh"
+    run "cd #{current_path} && (source environment.sh || true) && ./bin/run_server.sh"
   end
 
   desc "kills the application by searching for the specified process name"
@@ -54,6 +62,7 @@ namespace :fezzik do
   task :deploy do
     Rake::Task["fezzik:push"].invoke
     Rake::Task["fezzik:symlink"].invoke
+    Rake::Task["fezzik:setup_app"].invoke
     Rake::Task["fezzik:restart"].invoke
     puts "#{app} deployed!"
   end
