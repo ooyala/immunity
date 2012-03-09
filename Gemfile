@@ -23,6 +23,7 @@ gem "fezzik"
 group :dev do
   gem "wirble" # colorized irb script/console
   gem "rerun"
+  gem "vagrant"
 end
 
 group :test do
