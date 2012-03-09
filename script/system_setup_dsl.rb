@@ -34,7 +34,7 @@ module DependencyDsl
   def satisfy_dependencies
     @dependencies.each do |dependency|
       unless dependency[:met?].call
-        puts "* Dependency #{dependency[:name]} is not met. Fixing that."
+        puts "* Dependency #{dependency[:name]} is not met. Installing it."
         dependency[:meet].call
         unless dependency[:met?].call
           fail_and_exit("'met?' for #{dependency[:name]} is still false after running 'meet'.")

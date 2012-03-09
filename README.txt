@@ -7,7 +7,7 @@ See the Procfile for the commands you can run to launch the web server, resque, 
 To run them all together in one terminal, we use Foreman (https://github.com/ddollar/foreman):
 bundle exec foreman start
 
-You'll need to have already have mysql and redis-server already running.
+You'll need to already have mysql and redis-server already running.
 
 # Pulling in builds
 Fetch_commits will grab commits from repos found in ~/immunity_repos, so you'll need to clone
