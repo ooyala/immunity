@@ -45,7 +45,7 @@ module DependencyDsl
 
   def ensure_package(package)
     dep package do
-      met? { `dpkg -s #{package} 2> /dev/null`.match(/\sinstalled/) }
+      met? { `dpkg -s #{package} 2> /dev/null | grep Status`.match(/\sinstalled/) }
       meet { check_status("apt-get install -qy #{package}", true, true) } # -q is quiet; -y is "answer yes"
     end
   end
