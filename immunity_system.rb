@@ -42,6 +42,24 @@ class ImmunitySystem < Sinatra::Base
     erb :"index.html", :locals => { :regions => regions }
   end
 
+  # Returns 200 if this server is able to service requests and 500 otherwise.
+  get "/healthz" do
+    begin
+      DB.fetch("SELECT 1 FROM DUAL").first
+    rescue => error
+      halt(500, "MySQL is not reachable: #{error.message}")
+    end
+
+    begin
+      @redis ||= Redis.new(:host => REDIS_HOST, :port => REDIS_PORT)
+      @redis.ping
+    rescue => error
+      halt(500, "Redis is not reachable: #{error.message}")
+    end
+
+    "Healthy."
+  end
+
   get "/styles.css" do
     scss :styles
   end
