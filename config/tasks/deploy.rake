@@ -18,10 +18,10 @@ namespace :fezzik do
 
   desc "after the app code has been rsynced, sets up the app's dependencies, like gems"
   remote_task :setup_app do
-    puts "Setting up server dependencies. This will take 4-8m if it's the first time it's being run."
+    puts "Setting up server dependencies. This will take 8 minutes if it's the first time it's being run."
     # This PATH addition is required for Vagrant, which has Ruby installed, but it's not in the default PATH.
     run "cd #{release_path} && PATH=$PATH:/opt/ruby/bin script/system_setup.rb"
-    run_with_env "cd #{release_path} && bundle install --without dev --without test"
+    run "cd #{release_path} && bundle install --without dev --without test"
   end
 
   desc "rsyncs the project from its staging location to each destination server"
