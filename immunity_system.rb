@@ -18,7 +18,7 @@ class ImmunitySystem < Sinatra::Base
 
   error(500) do
     content_type "text/plain"
-    env["sinatra.error"].detailed_to_s
+    env["sinatra.error"] ? env["sinatra.error"].detailed_to_s : response.body
   end
 
   configure :development do
