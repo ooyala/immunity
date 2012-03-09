@@ -22,6 +22,12 @@ namespace :fezzik do
     # This PATH addition is required for Vagrant, which has Ruby installed, but it's not in the default PATH.
     run "cd #{release_path} && PATH=$PATH:/opt/ruby/bin script/system_setup.rb"
     run "cd #{release_path} && bundle install --without dev --without test"
+    Rake::Task["fezzik:generate_foreman_upstart_scripts"].invoke
+  end
+
+  remote_task :generate_foreman_upstart_scripts do
+    foreman_command = "foreman export upstart /etc/init -a immunity_system -l /var/log -u root"
+    run "cd #{release_path} && bundle exec #{foreman_command}"
   end
 
   desc "rsyncs the project from its staging location to each destination server"
@@ -40,16 +46,12 @@ namespace :fezzik do
   desc "runs the executable in project/bin"
   remote_task :start do
     puts "starting from #{Fezzik::Util.capture_output { run "readlink #{current_path}" }}"
-    run "cd #{current_path} && (source environment.sh || true) && ./bin/run_server.sh"
+    run "start immunity_system"
   end
 
   desc "kills the application by searching for the specified process name"
   remote_task :stop do
-    # Replace YOUR_APP_NAME with whatever is run from your bin/run_app.sh file.
-    # If you'd like to do this nicer you can save the PID of your process with `echo $! > app.pid`
-    # in the start task and read the PID to kill here in the stop task.
-    # puts "stopping app"
-    # run "(kill -9 `ps aux | grep 'YOUR_APP_NAME' | grep -v grep | awk '{print $2}'` || true)"
+    run "stop immunity_system"
   end
 
   desc "restarts the application"
