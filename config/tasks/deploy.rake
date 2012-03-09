@@ -47,6 +47,13 @@ namespace :fezzik do
   remote_task :start do
     puts "starting from #{Fezzik::Util.capture_output { run "readlink #{current_path}" }}"
     run "start immunity_system"
+    # Give the server some time to start before checking on its status.
+    sleep 2
+    server_is_up?
+  end
+
+  remote_task :check_healthz do
+    server_is_up?
   end
 
   desc "kills the application by searching for the specified process name"
@@ -65,7 +72,23 @@ namespace :fezzik do
     Rake::Task["fezzik:push"].invoke
     Rake::Task["fezzik:symlink"].invoke
     Rake::Task["fezzik:setup_app"].invoke
-    Rake::Task["fezzik:restart"].invoke
+    # Rake::Task["fezzik:restart"].invoke
     puts "#{app} deployed!"
+  end
+
+  # Checks the server's healthz route.
+  def server_is_up?
+    begin
+      # -s: silent, -S: show error messages
+      env_settings = Fezzik.environments[domain]
+      command = "curl -s -S --max-time 6 localhost:#{env_settings[:port]}/healthz"
+      puts "checking: #{command}"
+      healthz_output = Fezzik::Util.capture_output { run command }
+      raise "/healthz responded with: #{healthz_output}" unless healthz_output.include?("healthy")
+      true
+    rescue Exception => error
+      puts "The service is down. It may have had trouble starting."
+      raise error
+    end
   end
 end
