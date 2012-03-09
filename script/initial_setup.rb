@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby-local-exec
-# A quick environment setup script to help developers get started quickly.
-
-require "open3"
+# A quick developer/macbook environment setup script to help developers get started quickly.
+# This will:
+# - check out repos the immunity system needs
+# - bundle install
+# - create mysql tables & run migrations
 
 def setup
   repos_path = File.expand_path("~/immunity_repos")
@@ -27,6 +29,7 @@ end
 # Runs the given command and raises an exception if its status code is nonzero.
 # Returns the stdout of the command.
 def run_command(command)
+  require "open3"
   puts command
   stdout, stderr, status = Open3.capture3(command)
   Open3.popen3(command) { |stdin, stdout, stderr| stdout_stream = stdout }
