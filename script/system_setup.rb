@@ -32,15 +32,21 @@ dep "rbenv" do
     # These instructions are from https://github.com/sstephenson/rbenv/wiki/Using-rbenv-in-Production
     command = "wget -q -O - https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash"
     check_status(command, true)
-    # Ensure rbenv is in the PATH for the remainder of this script's execution.
-    ENV["PATH"] = "#{ENV['HOME']}/.rbenv/bin:#{ENV['PATH']}"
+    unless ARGV.include?("--forked-after-rbenv") # To guard against an infinite forking loop.
+      STDOUT.flush # Or we will lose any previous output after we exec().
+      exec "bash -c 'source ~/.bashrc; #{__FILE__} --forked-after-rbenv'"
+    end
   end
 end
 
 dep "rbenv ruby 1.9" do
   ruby_version = "1.9.2-p290"
   met? { `which ruby`.include?("rbenv") && `ruby -v`.include?(ruby_version.gsub("-", "")) }
-  meet { puts `rbenv install #{ruby_version}` }
+  meet do
+    puts "Installing Ruby will take about 5 minutes."
+    check_status("rbenv install #{ruby_version}", true, true)
+    check_status("rbenv rehash", true, true)
+  end
 end
 
 ensure_gem("bundler")
