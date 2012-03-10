@@ -6,7 +6,10 @@
 
 def setup
   run_command("vagrant up")
+  setup_ssh_config
+end
 
+def setup_ssh_config
   begin
     ssh_config_path = File.expand_path("~/.ssh/config")
     run_command("cp ~/.ssh/config ~/.ssh/config.bak")
