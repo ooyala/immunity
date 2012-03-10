@@ -27,6 +27,7 @@ set :user, "root"
 
 Fezzik.destination :vagrant do
   set :domain, "immunity_system_vagrant"
+  Fezzik.env :immunity_server_port, 3102
   Fezzik.env :rack_env, "production"
   Fezzik.env :db_location, "DBI:Mysql:vstreams"
   Fezzik.env :db_user, "root"

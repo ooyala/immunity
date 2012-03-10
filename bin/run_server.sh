@@ -1,1 +1,1 @@
-bundle exec rackup --port 3102 config.ru
+bundle exec rackup --port ${IMMUNITY_SERVER_PORT:-3102} config.ru

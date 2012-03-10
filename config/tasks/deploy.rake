@@ -81,7 +81,7 @@ namespace :fezzik do
     begin
       # -s: silent, -S: show error messages
       env_settings = Fezzik.environments[domain]
-      command = "curl -s -S --max-time 6 localhost:#{env_settings[:port]}/healthz"
+      command = "curl -s -S --max-time 6 localhost:#{env_settings[:immunity_server_port]}/healthz"
       puts "checking: #{command}"
       healthz_output = Fezzik::Util.capture_output { run command }
       raise "/healthz responded with: #{healthz_output}" unless healthz_output.include?("healthy")
