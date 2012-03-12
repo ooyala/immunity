@@ -46,7 +46,8 @@ namespace :fezzik do
   desc "runs the executable in project/bin"
   remote_task :start do
     puts "starting from #{Fezzik::Util.capture_output { run "readlink #{current_path}" }}"
-    run "start immunity_system"
+    # Upstart will not let you start a started job. Check if it's started already prior to invoking start.
+    run "(status immunity_system | grep stop) && start immunity_system || true"
     # Give the server some time to start before checking on its status.
     sleep 5
     server_is_up?
@@ -58,7 +59,8 @@ namespace :fezzik do
 
   desc "kills the application by searching for the specified process name"
   remote_task :stop do
-    run "stop immunity_system"
+    # Upstart will not let you stop a stopped job. Check if it's stopped already prior to invoking stop.
+    run "(status immunity_system | grep start) && stop immunity_system || true"
   end
 
   desc "restarts the application"
