@@ -48,7 +48,7 @@ namespace :fezzik do
     puts "starting from #{Fezzik::Util.capture_output { run "readlink #{current_path}" }}"
     run "start immunity_system"
     # Give the server some time to start before checking on its status.
-    sleep 2
+    sleep 5
     server_is_up?
   end
 
