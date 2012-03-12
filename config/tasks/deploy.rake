@@ -21,7 +21,7 @@ namespace :fezzik do
     puts "Setting up server dependencies. This will take 8 minutes to install Ruby the first time it's run."
     # This PATH addition is required for Vagrant, which has Ruby installed, but it's not in the default PATH.
     run "cd #{release_path} && PATH=$PATH:/opt/ruby/bin script/system_setup.rb"
-    run "cd #{release_path} && bundle install --without dev --without test"
+    run "cd #{release_path} && script/initial_app_setup.rb production"
     Rake::Task["fezzik:generate_foreman_upstart_scripts"].invoke
   end
 
@@ -76,7 +76,7 @@ namespace :fezzik do
     Rake::Task["fezzik:push"].invoke
     Rake::Task["fezzik:symlink"].invoke
     Rake::Task["fezzik:setup_app"].invoke
-    # Rake::Task["fezzik:restart"].invoke
+    Rake::Task["fezzik:restart"].invoke
     puts "#{app} deployed!"
   end
 
