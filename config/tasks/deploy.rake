@@ -88,7 +88,7 @@ namespace :fezzik do
       command = "curl -s -S --max-time 6 localhost:#{env_settings[:immunity_server_port]}/healthz"
       puts "checking: #{command}"
       healthz_output = Fezzik::Util.capture_output { run command }
-      raise "/healthz responded with: #{healthz_output}" unless healthz_output.include?("healthy")
+      raise "/healthz responded with: #{healthz_output}" unless healthz_output.downcase.include?("healthy")
       true
     rescue Exception => error
       puts "The service is down. It may have had trouble starting."
