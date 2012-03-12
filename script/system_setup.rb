@@ -20,7 +20,8 @@ ubuntu_packages = [
   "curl", "build-essential", "libxslt1-dev", "libxml2-dev", "libssl-dev", # Required for running rubybuild.
   "g++", "dialog", # For installing native extensions.
   "mysql-client-5.1",
-  "libmysqlclient-dev" # For building the native MySQL gem.
+  "libmysqlclient-dev", # For building the native MySQL gem.
+  "mysql-server"
 ]
 ubuntu_packages.each { |package| ensure_package(package) }
 
