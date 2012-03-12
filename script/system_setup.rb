@@ -18,10 +18,10 @@ include DependencyDsl
 ubuntu_packages = [
   "git-core", # Required for rbenv.
   "curl", "build-essential", "libxslt1-dev", "libxml2-dev", "libssl-dev", # Required for running rubybuild.
-  "g++", "dialog", # For installing native extensions.
-  "mysql-client-5.1",
+  "g++", # For installing native extensions.
   "libmysqlclient-dev", # For building the native MySQL gem.
-  "mysql-server"
+  "mysql-server",
+  "redis-server"
 ]
 ubuntu_packages.each { |package| ensure_package(package) }
 
