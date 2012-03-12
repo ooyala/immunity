@@ -7,8 +7,8 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"))
 
 def ensure_linux!
-  if `uname`.downcase.include?("darwin")
-    fail_and_exit "This setup script is intended for Ubuntu Linux. Don't run it on your Mac."
+  unless `uname`.downcase.include?("linux")
+    fail_and_exit "This setup script is intended for Linux on our servers. Don't run it on your Macbook."
   end
 end
 
