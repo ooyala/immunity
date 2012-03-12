@@ -5,6 +5,6 @@ Vagrant::Config.run do |config|
   config.vm.box = "base"
 
   # Forward a port from the guest to the host, which allows for outside computers to access the VM. You can
-  # access the immunity server running inside of Vagrant on port 3102.
-  config.vm.forward_port 6102, 3102
+  # access the immunity server running inside of Vagrant on port 6102.
+  config.vm.forward_port 3102, 6102
 end
