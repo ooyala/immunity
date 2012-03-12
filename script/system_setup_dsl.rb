@@ -34,7 +34,7 @@ module DependencyDsl
   def satisfy_dependencies
     @dependencies.each do |dependency|
       unless dependency[:met?].call
-        puts "* Dependency #{dependency[:name]} is not met. Installing it."
+        puts "* Dependency #{dependency[:name]} is not met. Meeting it."
         dependency[:meet].call
         unless dependency[:met?].call
           fail_and_exit("'met?' for #{dependency[:name]} is still false after running 'meet'.")
@@ -44,11 +44,15 @@ module DependencyDsl
   end
 
   def package_installed?(package) `dpkg -s #{package} 2> /dev/null | grep Status`.match(/\sinstalled/) end
+  def install_package(package)
+    # Specify a noninteractive frontend, so dpkg won't prompt you for info. -q is quiet; -y is "answer yes".
+    check_status("export DEBIAN_FRONTEND=noninteractive && apt-get install -qy #{package}", true, true)
+  end
+
   def ensure_package(package)
     dep package do
       met? { package_installed?(package) }
-      # Specify a noninteractive frontend, so scripts won't prompt you. -q is quiet; -y is "answer yes".
-      meet { check_status("DEBIAN_FRONTEND=noninteractive && apt-get install -qy #{package}", true, true) }
+      meet { install_package(package) }
     end
   end
 
