@@ -41,6 +41,8 @@ namespace :fezzik do
   remote_task :symlink do
     puts "symlinking current to #{release_path}"
     run "cd #{deploy_to} && ln -fns #{release_path} current"
+    # Add a symlink to the current deploy in root's home directory, for convenience.
+    run "rm ~/immunity_system; ln -s #{current_path} ~/current"
   end
 
   desc "runs the executable in project/bin"
