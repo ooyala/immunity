@@ -43,10 +43,12 @@ module DependencyDsl
     end
   end
 
+  def package_installed?(package) `dpkg -s #{package} 2> /dev/null | grep Status`.match(/\sinstalled/) end
   def ensure_package(package)
     dep package do
-      met? { `dpkg -s #{package} 2> /dev/null | grep Status`.match(/\sinstalled/) }
-      meet { check_status("apt-get install -qy #{package}", true, true) } # -q is quiet; -y is "answer yes"
+      met? { package_installed?(package) }
+      # Specify a noninteractive frontend, so scripts won't prompt you. -q is quiet; -y is "answer yes".
+      meet { check_status("DEBIAN_FRONTEND=noninteractive && apt-get install -qy #{package}", true, true) }
     end
   end
 
