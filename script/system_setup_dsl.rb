@@ -67,13 +67,17 @@ module DependencyDsl
   end
 
   # Ensures the file at dest_path is exactly the same as the one in source_path.
-  def ensure_file(source_path, dest_path)
+  # Invokes the given block if the file is changed. Use this to restart a service, for instance.
+  def ensure_file(source_path, dest_path, &on_change)
     dep dest_path do
       met? do
         raise "This file does not exist: #{source_path}" unless File.exists?(source_path)
         File.exists?(dest_path) && (Digest::MD5.file(source_path) == Digest::MD5.file(dest_path))
       end
-      meet { FileUtils.cp(source_path, dest_path) }
+      meet do
+        FileUtils.cp(source_path, dest_path)
+        on_change.call if on_change
+      end
     end
   end
 end
