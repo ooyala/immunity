@@ -21,7 +21,8 @@ ubuntu_packages = [
   "g++", # For installing native extensions.
   "libmysqlclient-dev", # For building the native MySQL gem.
   "mysql-server",
-  "redis-server"
+  "redis-server",
+  "nginx"
 ]
 ubuntu_packages.each { |package| ensure_package(package) }
 
@@ -47,6 +48,21 @@ dep "rbenv ruby 1.9" do
     puts "Installing Ruby will take about 5 minutes."
     check_status("rbenv install #{ruby_version}", true, true)
     check_status("rbenv rehash", true, true)
+  end
+end
+
+ensure_file("script/system_setup_files/nginx_site.conf", "/etc/nginx/sites-enabled/immunity_system.conf") do
+  `/etc/init.d/nginx restart`
+end
+
+dep "configure nginx" do
+  met? { !File.exists?("/etc/nginx/sites-enabled/default") }
+  meet do
+    # Ensure nginx gets started on system boot. It's still using non-Upstart init scripts.
+    `update-rc.d nginx defaults`
+    # This default site configuration is not useful.
+    FileUtils.rm("/etc/nginx/sites-enabled/default")
+    `/etc/init.d/nginx restart`
   end
 end
 
