@@ -28,6 +28,11 @@ namespace :fezzik do
   remote_task :generate_foreman_upstart_scripts do
     foreman_command = "foreman export upstart /etc/init -a immunity_system -l /var/log -u root"
     run "cd #{release_path} && bundle exec #{foreman_command}"
+
+    # Munge the Foreman-generated upstart conf files so that our app starts on system startup (right after
+    # mysql). This is a bit hacky -- Foreman supports templates which you can use to modify the generated
+    # upstart conf files. At the time of writing this was not worth the extra effort.
+    run "echo 'start on starting mysql' >> /etc/init/immunity_system.conf"
   end
 
   desc "rsyncs the project from its staging location to each destination server"
