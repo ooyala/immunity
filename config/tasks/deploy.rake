@@ -26,7 +26,8 @@ namespace :fezzik do
   end
 
   remote_task :generate_foreman_upstart_scripts do
-    foreman_command = "foreman export upstart /etc/init -a immunity_system -l /var/log -u root"
+    puts "Exporting foreman daemon scripts to /etc/init"
+    foreman_command = "foreman export upstart /etc/init -a immunity_system -l /var/log -u root > /dev/null"
     run "cd #{release_path} && bundle exec #{foreman_command}"
 
     # Munge the Foreman-generated upstart conf files so that our app starts on system startup (right after

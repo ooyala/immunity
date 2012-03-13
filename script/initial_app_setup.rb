@@ -31,7 +31,7 @@ dep "bundle install" do
   met? { check_status("bundle check") rescue false }
   meet do
     args = (environment == "production") ? "--without dev --without test" : ""
-    check_status("bundle install #{args}", true, true)
+    check_status("bundle install --quiet #{args}", true, true)
   end
 end
 
