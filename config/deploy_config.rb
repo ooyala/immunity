@@ -25,18 +25,21 @@ set :user, "root"
 # This localhost target is for testing the deployment pipeline with quick turnaround times.
 #
 
+common_options = {
+  db_user: "root",
+  db_password: "",
+  rack_env: "production",
+  immunity_server_port: 3102
+}
+
+def include_options(options) options.each { |key, value| Fezzik.env key, value } end
+
 Fezzik.destination :vagrant do
   set :domain, "immunity_system_vagrant"
-  Fezzik.env :immunity_server_port, 3102
-  Fezzik.env :rack_env, "production"
-  Fezzik.env :db_location, "DBI:Mysql:vstreams"
-  Fezzik.env :db_user, "root"
-  Fezzik.env :db_password, ""
-  Fezzik.env :num_workers, 2
-  Fezzik.env :unicorn_pid_file, "#{deploy_to}/unicorn.pid"
-  Fezzik.env :helios_root, "#{current_path}"
-  Fezzik.env :sphinx_server, "localhost"
-  Fezzik.env :sphinx_port, 3312
-  Fezzik.env :sphinx_rt_server, "127.0.0.1"
-  Fezzik.env :sphinx_rt_mysql_port, 9306
+  include_options(common_options)
+end
+
+Fezzik.destination :prod do
+  set :domain, "playertools-dev1.us-east-1.ooyala.com"
+  include_options(common_options)
 end
