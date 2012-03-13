@@ -30,11 +30,10 @@ load "./Rakefile"
 class HttpResque < Sinatra::Base
   settings.server = "thin"
 
-  STDOUT.sync = true
-  STDERR.sync = true
+  STDOUT.sync = STDERR.sync = true
 
   # Run rake resque:work in a background process. It will exit when this process exits.
-  pid = fork { Rake::Task["resque:work"].invoke }
+  fork { Rake::Task["resque:work"].invoke }
 
   settings.port = ARGV.include?("-p") ? ARGV[ARGV.index("-p") + 1] : ENV["PORT"]
 
