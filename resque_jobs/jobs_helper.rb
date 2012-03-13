@@ -19,7 +19,9 @@ module JobsHelper
       log_file_path = File.join(File.dirname(__FILE__), "../log/", log_file_name)
       FileUtils.touch(log_file_path)
 
-      self.logger = Logger.new(MultiIO.new(STDOUT, File.open(log_file_path, "a")))
+      file = File.open(log_file_path, "a")
+      file.sync = true
+      self.logger = Logger.new(MultiIO.new(STDOUT, file))
       logger.formatter = proc do |severity, datetime, program_name, message|
         time = datetime.strftime "%Y-%m-%d %H:%M:%S"
         "[#{time}] #{message}\n"
