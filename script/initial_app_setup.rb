@@ -30,7 +30,9 @@ end
 dep "bundle install" do
   met? { check_status("bundle check") rescue false }
   meet do
-    args = (environment == "production") ? "--without dev --without test" : ""
+    # NOTE(philc): We *are* installing the test group because currently we run integration tests on the
+    # prod boxes.
+    args = (environment == "production") ? "--without dev" : ""
     check_status("bundle install --quiet #{args}", true, true)
   end
 end
