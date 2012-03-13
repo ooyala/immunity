@@ -79,11 +79,22 @@ namespace :fezzik do
 
   desc "full deployment pipeline"
   task :deploy do
+    Rake::Task["fezzik:deploy_without_tests"].invoke
+    Rake::Task["fezzik:run_integration_tests"].invoke
+    puts "#{app} deployed!"
+  end
+
+  task :deploy_without_tests do
     Rake::Task["fezzik:push"].invoke
     Rake::Task["fezzik:symlink"].invoke
     Rake::Task["fezzik:setup_app"].invoke
     Rake::Task["fezzik:restart"].invoke
-    puts "#{app} deployed!"
+  end
+
+  desc "Run the integration tests remotely on the server"
+  remote_task :run_integration_tests do
+    puts "Running the integration tests."
+    run "cd #{current_path} && bundle exec rake test:integrations"
   end
 
   # Checks the server's healthz route.
