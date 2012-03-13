@@ -27,8 +27,11 @@ group :dev do
 end
 
 group :test do
-  source "http://gems.us-east-1.ooyala.com:8080"
-  gem "gamut"
+  # Note that in prod we currently can't contact this test server for some reason. Even though we don't
+  # deploy with "--without test", bundle install will still fail if it can't contact this gem server.
+  # See https://github.com/carlhuda/bundler/issues/1745.
+  # source "http://gems.us-east-1.ooyala.com:8080"
+  # gem "gamut"
   gem "scope"
   gem "remote_http_testing"
 end
