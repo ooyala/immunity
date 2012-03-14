@@ -13,23 +13,26 @@ class FetchCommits
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
-  def self.perform
-    setup_logger("fetch_commits.log")
+  # The arguments hash is used by our integration tests to test each main logic path.
+  # - repos: the list of repo names to git fetch.
+  def self.perform(arguments = {})
+    logger ||= setup_logger("fetch_commits.log")
+    logger.info("beginning to perform fetch_commits")
+
+    # Reconnect to the database if our connection has timed out.
+    Build.select(1).first rescue nil
+
     begin
-      fetch_commits()
+      # TODO(philc): This repo name shouldn't be hardcoded here.
+      repos = arguments["repos"] || ["html5player"]
+      fetch_commits(repos)
     rescue => exception
       logger.info("Failed to complete job: #{exception}")
       raise exception
     end
-
-    # Reconnect to the database if our connection has timed out.
-    Build.select(1).first rescue nil
   end
 
-  def self.fetch_commits()
-    # TODO(philc): This repo name shouldn't be hardcoded here.
-    repos = ["html5player"]
-
+  def self.fetch_commits(repos)
     repos.each do |repo_name|
       logger.info "Fetching new commits from #{repo_name}."
       project_repo = File.join(REPO_DIRS, repo_name)
