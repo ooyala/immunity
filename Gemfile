@@ -19,11 +19,12 @@ gem "simple_memoize"
 gem "redis-objects"
 gem "sinatra-contrib" # For Sinatra::Reloader
 gem "fezzik"
+# gem "json", "~> 1.5.1"
 
 group :dev do
   gem "wirble" # colorized irb script/console
   gem "rerun"
-  gem "vagrant"
+  gem "vagrant", ">= 1.0.1"
 end
 
 group :test do
