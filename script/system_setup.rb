@@ -21,6 +21,7 @@ ubuntu_packages = [
   "g++", # For installing native extensions.
   "libmysqlclient-dev", # For building the native MySQL gem.
   "redis-server",
+  "mysql-server",
   "nginx"
 ]
 ubuntu_packages.each { |package| ensure_package(package) }
@@ -62,16 +63,6 @@ dep "configure nginx" do
     # This default site configuration is not useful.
     FileUtils.rm("/etc/nginx/sites-enabled/default")
     `/etc/init.d/nginx restart`
-  end
-end
-
-dep "configure mysql" do
-  met? { package_installed?("mysql-server") && File.exists?("/etc/init/mysql.conf") }
-  meet do
-    install_package("mysql-server")
-    # on Ubuntu this service is disabled by default.
-    FileUtils.mv("/etc/init/mysql.conf.disabled", "/etc/init/mysql.conf")
-    check_status("start mysql")
   end
 end
 
