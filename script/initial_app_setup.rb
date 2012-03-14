@@ -50,14 +50,16 @@ end
 
 # TODO(philc): Which repos to clone shouldn't be here as part of the deploy script, but rather a piece of
 # the app's configuration or settings.
-# repos_path = File.expand_path("~/immunity_repos")
-# repo_name = "html5player"
-# dep "clone initial git repos into ~/immunity_repos" do
-#   met { File.exists?(File.join(repos_path, repo_name)) }
-#   meet do
-#     FileUtils.mkdir_p("#{repos_path}")
-#     check_status "cd '#{repos_path}' && git clone ssh://git.corp.ooyala.com/#{repo_name}.git"
-#   end
-# end
+repos = ["html5player"]
+repos_path = File.expand_path("~/immunity_repos")
+repos.each do |repo_name|
+  dep "clone the #{repo_name} git repo" do
+    met? { File.exists?(File.join(repos_path, repo_name)) }
+    meet do
+      FileUtils.mkdir_p(repos_path)
+      check_status "cd '#{repos_path}' && git clone ssh://git.corp.ooyala.com/#{repo_name}.git"
+    end
+  end
+end
 
 satisfy_dependencies()
