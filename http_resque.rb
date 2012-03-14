@@ -69,7 +69,12 @@ class HttpResque < Sinatra::Base
   get "/queues/:queue/result_of_oldest_job" do
     job = Resque::Job.reserve(params[:queue])
     halt(404, "No jobs left in #{params[:queue]}") unless job
-    job.perform
+    begin
+      job.perform
+    rescue => error
+      halt(500, "This job raised an exception when run: " +
+          "#{job.inspect}\n#{error.class}: #{error.message}\n#{error.backtrace.join("\n")}")
+    end
     nil
   end
 
