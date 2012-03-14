@@ -38,11 +38,11 @@ class FetchCommits
       project_repo = File.join(REPO_DIRS, repo_name)
       # We perform a "git reset --hard head" in case we've accidentally modified the build during a deploy,
       # e.g. by running `bundle install` which can modify Gemfile.lock.
-      run_command("cd #{project_repo} && git reset --hard head && git pull")
+      run_command("cd #{project_repo} && git reset --hard origin/master && git pull")
       # TODO(philc): We must also pull this repo, because html5player has symlinks into it. This will soon
       # change.
-      run_command("cd #{File.join(REPO_DIRS, 'playertools')} && git pull")
-      latest_commit = run_command("cd #{project_repo} && git rev-list --max-count=1 head").strip
+      run_command("cd #{project_repo} && git pull")
+      latest_commit = run_command("cd #{project_repo} && git rev-list --max-count=1 HEAD").strip
       if Build.first(:commit => latest_commit, :repo => repo_name).nil?
         logger.info "#{repo_name} has new commits. The latest is now #{latest_commit}."
         build = Build.create(:commit => latest_commit, :repo => repo_name)
