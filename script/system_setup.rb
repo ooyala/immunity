@@ -77,4 +77,12 @@ end
 
 ensure_gem("bundler")
 
+# Note that this git_ssh_private_key is not checked into the repo. It gets created at deploy time.
+ensure_file("script/system_setup_files/git_ssh_private_key", "#{ENV['HOME']}/.ssh/git_ssh_private_key") do
+  # The ssh command requires that this file have very low privileges.
+  `chmod 0600 #{ENV['HOME']}/.ssh/git_ssh_private_key`
+end
+
+ensure_file("script/system_setup_files/ssh_config", "#{ENV['HOME']}/.ssh/config")
+
 satisfy_dependencies()

@@ -6,8 +6,10 @@ namespace :fezzik do
     puts "staging project in /tmp/#{app}"
     FileUtils.rm_rf "/tmp/#{app}"
     FileUtils.mkdir_p "/tmp/#{app}/staged"
+
     # Use rsync to preserve executability and follow symlinks.
     system("rsync -aqE #{local_path}/. /tmp/#{app}/staged")
+    stage_sensitive_files
   end
 
   desc "performs any necessary setup on the destination servers prior to deployment"
@@ -97,7 +99,20 @@ namespace :fezzik do
     run "cd #{current_path} && bundle exec rake test:integrations"
   end
 
-  # Checks the server's healthz route.
+  # We have some sensitive files (like a private ssh key for git) which are checked into the git repo.
+  # These get copied into the staged deploy prior to rsyncing the code to the remote server.
+  def stage_sensitive_files
+    key_file = "git_ssh_private_key"
+    credentials_directory = ENV["IMMUNITY_CREDENTIALS"]
+    unless credentials_directory && File.exist?("#{credentials_directory}/#{key_file}")
+      raise "You must set the IMMUNITY_CREDENTIALS env variable and place the #{key_file} file there."
+    end
+
+    # Copy our private SSH key for git into the staged deploy.
+    FileUtils.cp("#{credentials_directory}/#{key_file}", "/tmp/#{app}/staged/script/system_setup_files/")
+  end
+
+  # Makes a request to the server's /healthz route. Raises an exception if healthz is not a 200.
   def server_is_up?
     begin
       # -s: silent, -S: show error messages

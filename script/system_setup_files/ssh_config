@@ -1,0 +1,6 @@
+# This will get copied to ~/.ssh/config
+# It uses a specific SSH key for accessing git.corp.
+
+Host git.corp.ooyala.com
+  User git
+  IdentityFile ~/.ssh/git_ssh_private_key
