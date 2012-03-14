@@ -7,6 +7,8 @@
 def setup
   run_command("vagrant up")
   setup_ssh_config
+  # Ensure no old packages are lingering around. This will avoid possible 404's when installing packages.
+  `ssh immunity_system_vagrant aptitude update`
 end
 
 def setup_ssh_config
