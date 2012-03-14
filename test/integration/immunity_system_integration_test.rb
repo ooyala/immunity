@@ -33,7 +33,8 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 404
   end
 
-  context "core workflow" do
+
+  context "core deploy workflow" do
     setup_once do
       @@region = "integration_test_sandbox2"
       @@build_id = create_build(:current_region => @@region)["id"]

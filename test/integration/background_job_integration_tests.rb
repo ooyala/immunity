@@ -56,6 +56,20 @@ class MonitoringJobIntegrationTest < Scope::TestCase
     end
   end
 
+  context "fetch commits" do
+    should "successfully access git" do
+      # Running `git fetch` will fail if the git/ssh credentials are not setup properly, so verify they are.
+      use_server(RESQUE_SERVER) do
+        job_args = { :repos => ["html5player"] }
+        post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "FetchCommits", :arguments => [job_args] }.to_json
+        assert_status 200
+
+        get "/queues/#{TEST_QUEUE}/result_of_oldest_job"
+        assert_status 200
+      end
+    end
+  end
+
   teardown_once do
     delete "/builds/test_builds"
   end
