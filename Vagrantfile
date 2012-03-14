@@ -7,4 +7,7 @@ Vagrant::Config.run do |config|
   # Forward a port from the guest to the host, which allows for outside computers to access the VM. You can
   # access the immunity server running inside of Vagrant on port 6102.
   config.vm.forward_port 3102, 6102
+
+  # Have Vagrant use your OSX VPN when it's active. Found via https://gist.github.com/1277049.
+  config.vm.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
 end
