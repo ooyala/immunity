@@ -18,8 +18,8 @@ gem "bourbon" # Extra CSS mixins for Sass.
 gem "simple_memoize"
 gem "redis-objects"
 gem "sinatra-contrib" # For Sinatra::Reloader
-gem "fezzik"
-# gem "json", "~> 1.5.1"
+gem "fezzik" # For deploying.
+gem "http_resque" # For integration testing our Resque jobs.
 
 group :dev do
   gem "wirble" # colorized irb script/console

@@ -7,4 +7,4 @@ queues = %W(deploy_builds fetch_commits monitoring run_tests)
 # TODO(philc): In the future spin up one worker per queue.
 ENV["QUEUE"] = queues.join(",")
 puts "Starting Resque for queues: #{queues.join(", ")}"
-exec "./http_resque.rb -p 3103", *ARGV
+exec "http_resque -p 3103", *ARGV
