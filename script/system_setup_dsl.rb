@@ -1,9 +1,5 @@
 # This is small goal-oriented DSL for installing system components. It's inspired by Babushka
-# (https://github.com/benhoskings/babushka) and could be replaced by Babushka (or Puppet or Chef)
-# when we want more features.
-require "fileutils"
-require "digest/md5"
-
+# (http://github.com/benhoskings/babushka) but is simpler and suited only to provisioning a production webapp.
 # Usage:
 #
 # include DependencyDsl
@@ -11,6 +7,10 @@ require "digest/md5"
 #   met? { (check if your dependency is met) }
 #   meet { (install your dependency) }
 # end
+
+require "fileutils"
+require "digest/md5"
+
 module DependencyDsl
   def dep(name)
     @dependencies ||= []
@@ -32,12 +32,11 @@ module DependencyDsl
   end
 
   def satisfy_dependencies
-    @dependencies.each do |dependency|
-      unless dependency[:met?].call
-        puts "* Dependency #{dependency[:name]} is not met. Meeting it."
-        dependency[:meet].call
-        unless dependency[:met?].call
-          fail_and_exit("'met?' for #{dependency[:name]} is still false after running 'meet'.")
+    @dependencies.each do |dep|
+      unless dep[:met?].call
+        puts "* Dependency #{dep[:name]} is not met. Meeting it."
+        dep[:meet].call
+        fail_and_exit %Q("met?" for #{dep[:name]} is still false after running "meet".) unless dep[:met?].call
         end
       end
     end
@@ -67,7 +66,7 @@ module DependencyDsl
   end
 
   # Ensures the file at dest_path is exactly the same as the one in source_path.
-  # Invokes the given block if the file is changed. Use this to restart a service, for instance.
+  # Invokes the given block if the file is changed. Use this block to restart a service, for instance.
   def ensure_file(source_path, dest_path, &on_change)
     dep dest_path do
       met? do
