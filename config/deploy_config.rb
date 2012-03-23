@@ -7,7 +7,7 @@ set :app, "immunity_system"
 set :deploy_to, "/opt/ooyala/#{app}"
 set :release_path, "#{deploy_to}/releases/#{Time.now.strftime("%Y%m%d%H%M")}"
 set :local_path, Dir.pwd
-set :user, "root"
+set :user, "immunity"
 
 # Each destination is a set of machines and configurations to deploy to.
 # You can deploy to a destination from the command line with:
@@ -25,21 +25,27 @@ set :user, "root"
 # This localhost target is for testing the deployment pipeline with quick turnaround times.
 #
 
-common_options = {
+common_env_vars = {
   db_user: "root",
   db_password: "",
   rack_env: "production",
   immunity_server_port: 3102
 }
 
-def include_options(options) options.each { |key, value| Fezzik.env key, value } end
+def include_env_vars(env_vars) env_vars.each { |key, value| Fezzik.env key, value } end
 
 Fezzik.destination :vagrant do
-  set :domain, "immunity_system_vagrant"
-  include_options(common_options)
+  set :hostname, "immunity_system_vagrant"
+  set :domain, "#{user}@#{hostname}"
+  include_env_vars(common_env_vars)
+  host "root@#{hostname}", :root_user
+  host "immunity@#{hostname}", :deploy_user
 end
 
 Fezzik.destination :prod do
-  set :domain, "playertools-dev1.us-east-1.ooyala.com"
-  include_options(common_options)
+  set :hostname, "playertools-dev1.us-east-1.ooyala.com"
+  set :domain, "#{user}@#{hostname}"
+  include_env_vars(common_env_vars)
+  host "root@#{hostname}", :root_user_role
+  host "immunity@#{hostname}", :deploy_user_role
 end
