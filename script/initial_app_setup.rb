@@ -16,24 +16,24 @@ require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"
 include SystemSetupDsl
 
 def db_exists?(db_name)
-  check_status "#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null" rescue false
+  shell("#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null", :log => false) rescue false
 end
 
-def mysql_command() @mysql_command ||= (`which mysql`.empty? ? "mysql5" : "mysql") end
-def mysqladmin_command() @mysql_admin ||= (`which mysqladmin`.empty? ? "mysqladmin5" : "mysqladmin") end
+def mysql_command() @mysql_command ||= (`which mysql || which mysql5`).chomp end
+def mysqladmin_command() @mysql_admin ||= (`which mysqladmin || which mysqladmin5`).chomp end
 
 dep "create mysql immunity_system database" do
   met? { db_exists?("immunity_system") }
-  meet { check_status "#{mysqladmin_command} -u root create immunity_system" }
+  meet { shell "#{mysqladmin_command} -u root create immunity_system" }
 end
 
 dep "bundle install" do
-  met? { check_status("bundle check") rescue false }
+  met? { shell("bundle check", :log => false) rescue false }
   meet do
     # NOTE(philc): We *are* installing the test group because currently we run integration tests on the
     # prod boxes.
     args = (environment == "production") ? "--without dev" : ""
-    check_status("bundle install --quiet #{args}", true, true)
+    shell "bundle install --quiet #{args}"
   end
 end
 
@@ -45,7 +45,7 @@ dep "migrations" do
     result
   end
 
-  meet { check_status("script/run_migrations.rb", true, true) }
+  meet { shell "script/run_migrations.rb" }
 end
 
 # TODO(philc): Which repos to clone shouldn't be here as part of the deploy script, but rather a piece of
@@ -57,7 +57,7 @@ repos.each do |repo_name|
     met? { File.exists?(File.join(repos_path, repo_name)) }
     meet do
       FileUtils.mkdir_p(repos_path)
-      check_status "cd '#{repos_path}' && git clone ssh://git.corp.ooyala.com/#{repo_name}.git"
+      shell "cd '#{repos_path}' && git clone ssh://git.corp.ooyala.com/#{repo_name}.git"
     end
   end
 end

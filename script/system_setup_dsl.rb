@@ -26,13 +26,12 @@ module SystemSetupDsl
   def fail_and_exit(message) puts message; exit 1 end
 
   # Runs a command and raises an exception if its exit status was nonzero.
-  # - log_output: true by default
-  # - log_command: true by default
+  # - log: log the command being run, and its stdout. True by default.
   # - check_exit_code: raises an error if the command had a non-zero exit code. True by default.
   def shell(command, options = {})
-    puts command unless options[:log_command] == false
+    puts command unless options[:log] == false
     output = `#{command}`
-    puts output unless output.empty? || options[:log_output] == false
+    puts output unless output.empty? || options[:log] == false
     raise "#{command} had a failure exit status of #{$?.to_i}" unless $?.to_i == 0
     true
   end
@@ -61,9 +60,7 @@ module SystemSetupDsl
     end
   end
 
-  def gem_installed?(gem)
-    shell %Q{ruby -rubygems -e 'exit !Gem::Specification.find_all_by_name("#{gem}").empty?'} rescue false
-  end
+  def gem_installed?(gem) `gem list '#{gem}'`.include?(gem) end
 
   def ensure_gem(gem)
     dep gem do
