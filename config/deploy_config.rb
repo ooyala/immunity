@@ -46,6 +46,6 @@ Fezzik.destination :prod do
   set :hostname, "playertools-dev1.us-east-1.ooyala.com"
   set :domain, "#{user}@#{hostname}"
   include_env_vars(common_env_vars)
-  host "root@#{hostname}", :root_user_role
-  host "immunity@#{hostname}", :deploy_user_role
+  host "root@#{hostname}", :root_user
+  host "immunity@#{hostname}", :deploy_user
 end
