@@ -33,13 +33,9 @@ namespace :fezzik do
 
   desc "after the app code has been rsynced, sets up the app's dependencies, like gems"
   remote_task :setup_app, :roles => [:deploy_user] do
-    # puts "Setting up server dependencies. This will take 8 minutes to install Ruby the first time it's run."
-    # run 'which babushka || bash -c "`wget -O - babushka.me/up`"'
-    # run "cd #{release_path}/config && babushka app.configured"
+    puts "Setting up server dependencies. This will take 8 minutes to install Ruby the first time it's run."
     # This PATH addition is required for Vagrant, which has Ruby installed, but it's not in the default PATH.
-    puts "Running scripts/system_setup.rb"
     run "cd #{release_path} && PATH=$PATH:/opt/ruby/bin script/system_setup.rb"
-    puts "Running scripts/initial_app_setup.rb"
     run "cd #{release_path} && script/initial_app_setup.rb production"
     Rake::Task["fezzik:generate_foreman_upstart_scripts"].invoke
   end
@@ -58,7 +54,6 @@ namespace :fezzik do
   desc "rsyncs the project from its staging location to each destination server"
   remote_task({ :push => [:stage, :setup] }, { :roles => [:deploy_user] }) do
     puts "pushing to #{target_host}:#{release_path}"
-    run "whoami"
     # Copy on top of previous release to optimize rsync
     rsync "-q", "--copy-dest=#{current_path}", "/tmp/#{app}/staged/", "#{target_host}:#{release_path}"
   end
@@ -66,7 +61,6 @@ namespace :fezzik do
   desc "symlinks the latest deployment to /deploy_path/project/current"
   remote_task :symlink, :roles => [:deploy_user] do
     puts "symlinking current to #{release_path}"
-    run "whoami"
     run "cd #{deploy_to} && ln -fns #{release_path} current"
     # Add a symlink to the current deploy in our user's home directory, for convenience.
     run "rm ~/#{app} 2> /dev/null; ln -s #{current_path} ~/current"
