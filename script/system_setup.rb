@@ -6,14 +6,10 @@
 # We've written this brief DSL for specifying requirements. Read through it first.
 require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"))
 
-def ensure_linux!
-  unless `uname`.downcase.include?("linux")
-    fail_and_exit "This setup script is intended for Linux on our servers. Don't run it on your Macbook."
-  end
-end
-
-ensure_linux!
 include SystemSetupDsl
+unless `uname`.downcase.include?("linux")
+  fail_and_exit "This setup script is intended for Linux on our servers. Don't run it on your Macbook."
+end
 
 ubuntu_packages = [
   "git-core", # Required for rbenv.
