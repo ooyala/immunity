@@ -26,12 +26,13 @@ module SystemSetupDsl
   def fail_and_exit(message) puts message; exit 1 end
 
   # Runs a command and raises an exception if its exit status was nonzero.
-  # - log: log the command being run, and its stdout. True by default.
+  # - silent: if false, log the command being run and its stdout. False by default.
   # - check_exit_code: raises an error if the command had a non-zero exit code. True by default.
   def shell(command, options = {})
-    puts command unless options[:log] == false
+    silent = (options[:silent] != false)
+    puts command unless silent
     output = `#{command}`
-    puts output unless output.empty? || options[:log] == false
+    puts output unless output.empty? || silent
     raise "#{command} had a failure exit status of #{$?.to_i}" unless $?.to_i == 0
     true
   end

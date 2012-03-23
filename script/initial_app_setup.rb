@@ -16,7 +16,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"
 include SystemSetupDsl
 
 def db_exists?(db_name)
-  shell("#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null", :log => false) rescue false
+  shell("#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null", :silent => true) rescue false
 end
 
 def mysql_command() @mysql_command ||= (`which mysql || which mysql5`).chomp end
@@ -28,7 +28,7 @@ dep "create mysql immunity_system database" do
 end
 
 dep "bundle install" do
-  met? { shell("bundle check", :log => false) rescue false }
+  met? { shell("bundle check", :silent => true) rescue false }
   meet do
     # NOTE(philc): We *are* installing the test group because currently we run integration tests on the
     # prod boxes.
