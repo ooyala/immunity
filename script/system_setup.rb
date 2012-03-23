@@ -13,7 +13,7 @@ def ensure_linux!
 end
 
 ensure_linux!
-include DependencyDsl
+include SystemSetupDsl
 
 ubuntu_packages = [
   "git-core", # Required for rbenv.
@@ -29,13 +29,11 @@ ubuntu_packages.each { |package| ensure_package(package) }
 ensure_file("script/system_setup_files/.bashrc", "#{ENV['HOME']}/.bashrc")
 
 dep "rbenv" do
-  met? { command_exists?("rbenv") }
+  met? { in_path?("rbenv") }
   meet do
     # These instructions are from https://github.com/sstephenson/rbenv/wiki/Using-rbenv-in-Production
-    command = "wget -q -O - https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash"
-    check_status(command, true)
+    shell "wget -q -O - https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash"
     unless ARGV.include?("--forked-after-rbenv") # To guard against an infinite forking loop.
-      STDOUT.flush # Or we will lose any previous output after we exec().
       exec "bash -c 'source ~/.bashrc; #{__FILE__} --forked-after-rbenv'"
     end
   end
@@ -46,8 +44,8 @@ dep "rbenv ruby 1.9" do
   met? { `which ruby`.include?("rbenv") && `ruby -v`.include?(ruby_version.gsub("-", "")) }
   meet do
     puts "Installing Ruby will take about 5 minutes."
-    check_status("rbenv install #{ruby_version}", true, true)
-    check_status("rbenv rehash", true, true)
+    shell "rbenv install #{ruby_version}"
+    shell "rbenv rehash"
   end
 end
 
@@ -71,7 +69,7 @@ ensure_gem("bundler")
 # Note that this git_ssh_private_key is not checked into the repo. It gets created at deploy time.
 ensure_file("script/system_setup_files/git_ssh_private_key", "#{ENV['HOME']}/.ssh/git_ssh_private_key") do
   # The ssh command requires that this file have very low privileges.
-  `chmod 0600 #{ENV['HOME']}/.ssh/git_ssh_private_key`
+  shell "chmod 0600 #{ENV['HOME']}/.ssh/git_ssh_private_key"
 end
 
 ensure_file("script/system_setup_files/ssh_config", "#{ENV['HOME']}/.ssh/config")

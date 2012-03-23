@@ -13,7 +13,7 @@ environment = ARGV[0] || "development"
 
 require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"))
 
-include DependencyDsl
+include SystemSetupDsl
 
 def db_exists?(db_name)
   check_status "#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null" rescue false
