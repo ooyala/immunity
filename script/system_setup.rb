@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 # This sets up the system software on Ubuntu needed for a deploy.
-# NOTE(philc): This logic could be ported to Puppet or Chef. I tried to write this initially with Chef and
-# Puppet, but the weight of them almost crushed me.
 
-# We've written this brief DSL for specifying requirements. Read through it first.
 require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"))
 
 include SystemSetupDsl
