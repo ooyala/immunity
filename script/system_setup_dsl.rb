@@ -17,6 +17,8 @@ require "digest/md5"
 module SystemSetupDsl
   def dep(name)
     @dependencies ||= []
+    # If a dep gets required or defined twice, only run it once.
+    return if @dependencies.find { |dep| dep[:name] == name }
     @dependencies.push(@current_dependency = { :name => name })
     yield
   end
