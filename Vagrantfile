@@ -10,4 +10,8 @@ Vagrant::Config.run do |config|
 
   # Have Vagrant use your OSX VPN when it's active. Found via https://gist.github.com/1277049.
   config.vm.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+
+  # Have ssh be accessible through port 2240. Hard coding this so we don't collide with other vagrant vms.
+  config.vm.forward_port 22, 2240
+  config.ssh.port = 2240
 end
