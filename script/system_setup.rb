@@ -11,39 +11,14 @@ unless `uname`.downcase.include?("linux")
   fail_and_exit "This setup script is intended for Linux on our servers. Don't run it on your Macbook."
 end
 
-ubuntu_packages = [
-  "git-core", # Required for rbenv.
-  "curl", "build-essential", "libxslt1-dev", "libxml2-dev", "libssl-dev", # Required for running rubybuild.
+ensure_packages(
   "g++", # For installing native extensions.
   "libmysqlclient-dev", # For building the native MySQL gem.
-  "redis-server",
-  "mysql-server",
-  "nginx"
-]
-ubuntu_packages.each { |package| ensure_package(package) }
+  "redis-server", "mysql-server", "nginx")
 
 ensure_file("script/system_setup_files/.bashrc", "#{ENV['HOME']}/.bashrc")
 
-dep "rbenv" do
-  met? { in_path?("rbenv") }
-  meet do
-    # These instructions are from https://github.com/sstephenson/rbenv/wiki/Using-rbenv-in-Production
-    shell "wget -q -O - https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash"
-    unless ARGV.include?("--forked-after-rbenv") # To guard against an infinite forking loop.
-      exec "bash -c 'source ~/.bashrc; #{__FILE__} --forked-after-rbenv'"
-    end
-  end
-end
-
-dep "rbenv ruby 1.9" do
-  ruby_version = "1.9.2-p290"
-  met? { `which ruby`.include?("rbenv") && `ruby -v`.include?(ruby_version.gsub("-", "")) }
-  meet do
-    puts "Installing Ruby will take about 5 minutes."
-    shell "rbenv install #{ruby_version}"
-    shell "rbenv rehash"
-  end
-end
+ensure_rbenv_ruby("1.9.2-p290")
 
 ensure_file("script/system_setup_files/nginx_site.conf", "/etc/nginx/sites-enabled/immunity_system.conf") do
   `/etc/init.d/nginx restart`

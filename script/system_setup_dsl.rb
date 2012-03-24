@@ -10,6 +10,9 @@
 #   met? { (check if your dependency is met) }
 #   meet { (install your dependency) }
 # end
+#
+# TODO(philc): Gemify this.
+#
 
 require "fileutils"
 require "digest/md5"
@@ -50,12 +53,17 @@ module SystemSetupDsl
     end
   end
 
+  #
+  # Common deps that all Ruby apps need for deployment.
+  #
+
   def package_installed?(package) `dpkg -s #{package} 2> /dev/null | grep Status`.match(/\sinstalled/) end
   def install_package(package)
     # Specify a noninteractive frontend, so dpkg won't prompt you for info. -q is quiet; -y is "answer yes".
     shell "export DEBIAN_FRONTEND=noninteractive && sudo apt-get install -qy #{package}"
   end
 
+  def ensure_packages(*packages) packages.each { |package| ensure_package(package) } end
   def ensure_package(package)
     dep package do
       met? { package_installed?(package) }
@@ -83,6 +91,37 @@ module SystemSetupDsl
       meet do
         FileUtils.cp(source_path, dest_path)
         on_change.call if on_change
+      end
+    end
+  end
+
+  def ensure_rbenv
+    ensure_package "git-core"
+    dep "rbenv" do
+      met? { in_path?("rbenv") }
+      meet do
+        # These instructions are from https://github.com/sstephenson/rbenv/wiki/Using-rbenv-in-Production
+        shell "wget -q -O - https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash"
+        # We need to run rbenv init after install, which adjusts the path. If exec is causing us problems
+        # down the road, we can perhaps simulate running rbenv init without execing.
+        unless ARGV.include?("--forked-after-rbenv") # To guard against an infinite forking loop.
+          exec "bash -c 'source ~/.bashrc; #{$0} --forked-after-rbenv'" # $0 is the current process's name.
+        end
+      end
+    end
+  end
+
+  # ruby_version is a rbenv ruby version string like "1.9.2-p290".
+  def ensure_rbenv_ruby(ruby_version)
+    ensure_rbenv
+    ensure_packages "curl", "build-essential", "libxslt1-dev", "libxml2-dev", "libssl-dev"
+
+    dep "rbenv ruby #{ruby_version}" do
+      met? { `which ruby`.include?("rbenv") && `ruby -v`.include?(ruby_version.gsub("-", "")) }
+      meet do
+        puts "Installing Ruby will take about 5 minutes."
+        shell "rbenv install #{ruby_version}"
+        shell "rbenv rehash"
       end
     end
   end
