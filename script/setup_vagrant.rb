@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby-local-exec
-# Sets up vagrant for your developer machine. This script:
-# 1. Modifies .ssh/config file so you can log in to Vagrant using `ssh immunity_system_vagrant`
+# Sets up vagrant for your developer machine. This will:
+# 1. Modify .ssh/config file so you can log in to Vagrant using `ssh immunity_system_vagrant`
 #    instead of `vagrant ssh` (which is required to deploy to Vagrant).
-# 2. Transfers your public key so you can log into the Vagrant box as root.
+# 2. Add vagrant's public ssh key to root's .ssh/authorized_keys file, so you can login as root.
 
 def hostname() "immunity_system_vagrant" end
 
@@ -27,23 +27,22 @@ def setup_ssh_config
     #   Port 2222
     #   StrictHostKeyChecking no
     #   PasswordAuthentication no
+    #   IdentityFile /Users/philc/.vagrant.d/insecure_private_key
     #   IdentitiesOnly yes
 
     # Change your local .ssh/config to use root by default to login to vagrant.
     vagrant_ssh_config = vagrant_ssh_config.split("\n").
-        reject { |line| line.match(/User|UserKnownHostsFile|IdentifyFile/) }.join("\n")
+        reject { |line| line.match(/User vagrant|UserKnownHostsFile/) }.join("\n")
     vagrant_ssh_config += "\n  User root\n\n"
     File.open(ssh_config_path, "w") { |file| file.write(vagrant_ssh_config + original_ssh_config) }
   end
 
-  # Copy your public key to the vagrant machine and add it to root's authorized_keys, so you can ssh as root.
-  `scp ~/.ssh/id_dsa.pub vagrant@#{hostname}:~/`
-  remote_commands = 'sudo sh -c "mkdir -p ~/.ssh; cat id_dsa.pub >> ~/.ssh/authorized_keys; rm id_dsa.pub"'
+  # The vagrant user has the default "vagrant public key" in authorized_keys. Make it so for root as well.
+  remote_commands = "sudo mkdir /root/.ssh; sudo cp .ssh/authorized_keys /root/.ssh/authorized_keys"
   run_command "ssh vagrant@#{hostname} '#{remote_commands}'"
 end
 
-# Runs the given command and raises an exception if its status code is nonzero.
-# Returns the stdout of the command.
+# Runs the command and raises an exception if its status code is nonzero. Returns the stdout of the command.
 def run_command(command)
   require "open3"
   puts command
