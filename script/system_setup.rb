@@ -17,18 +17,20 @@ ensure_file("script/system_setup_files/.bashrc", "#{ENV['HOME']}/.bashrc")
 
 ensure_rbenv_ruby("1.9.2-p290")
 
+shell "sudo chgrp admin -R /etc/nginx/sites-enabled", :silent => true
+shell "sudo chmod g+w -R /etc/nginx/sites-enabled", :silent => true
 ensure_file("script/system_setup_files/nginx_site.conf", "/etc/nginx/sites-enabled/immunity_system.conf") do
-  `/etc/init.d/nginx restart`
+  shell "sudo /etc/init.d/nginx restart"
 end
 
 dep "configure nginx" do
   met? { !File.exists?("/etc/nginx/sites-enabled/default") }
   meet do
     # Ensure nginx gets started on system boot. It's still using non-Upstart init scripts.
-    `update-rc.d nginx defaults`
-    # This default site configuration is not useful.
-    FileUtils.rm("/etc/nginx/sites-enabled/default")
-    `/etc/init.d/nginx restart`
+    shell "update-rc.d nginx defaults"
+    # This default site configuration is not useful. Remove it.
+    shell "sudo rm /etc/nginx/sites-enabled/default"
+    shell "/etc/init.d/nginx restart"
   end
 end
 
