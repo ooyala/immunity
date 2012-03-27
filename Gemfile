@@ -20,6 +20,7 @@ gem "redis-objects"
 gem "sinatra-contrib" # For Sinatra::Reloader
 gem "fezzik" # For deploying.
 gem "http_resque" # For integration testing our Resque jobs.
+gem "terraform" # For provisioning a system.
 
 group :dev do
   gem "wirble" # colorized irb script/console
