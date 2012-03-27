@@ -23,7 +23,7 @@ namespace :fezzik do
       puts "Creating #{user} user."
       run_commands(
           "useradd --create-home --shell /bin/bash #{user}",
-          "adduser immunity --add_extra_groups admin",
+          "adduser #{user} --add_extra_groups admin",
           "mkdir -p /home/#{user}/.ssh/",
           "cp ~/.ssh/authorized_keys /home/#{user}/.ssh",
           "chown -R #{user} /home/#{user}/.ssh")
@@ -40,15 +40,15 @@ namespace :fezzik do
     Rake::Task["fezzik:generate_foreman_upstart_scripts"].invoke
   end
 
-  remote_task :generate_foreman_upstart_scripts, :roles => [:root_user] do
+  remote_task :generate_foreman_upstart_scripts, :roles => [:deploy_user] do
     puts "Exporting foreman daemon scripts to /etc/init"
-    foreman_command = "foreman export upstart /etc/init -a #{app} -l /var/log/immunity -u #{user} > /dev/null"
-    run "cd #{release_path} && bundle exec #{foreman_command}"
+    foreman_command = "foreman export upstart /etc/init -a #{app} -l /var/log/#{app} -u #{user} > /dev/null"
+    run "cd #{release_path} && sudo bundle exec #{foreman_command}"
 
     # Munge the Foreman-generated upstart conf files so that our app starts on system startup (right after
     # mysql). This is a bit hacky -- Foreman supports templates which you can use to modify the generated
     # upstart conf files. At the time of writing this was not worth the extra effort.
-    run "echo 'start on starting mysql' >> /etc/init/immunity_system.conf"
+    run %Q(sudo bash -c 'echo "start on starting mysql" >> /etc/init/#{app}.conf')
   end
 
   desc "rsyncs the project from its staging location to each destination server"
@@ -63,7 +63,7 @@ namespace :fezzik do
     puts "symlinking current to #{release_path}"
     run "cd #{deploy_to} && ln -fns #{release_path} current"
     # Add a symlink to the current deploy in our user's home directory, for convenience.
-    run "rm ~/#{app} 2> /dev/null; ln -s #{current_path} ~/current"
+    run "rm ~/current 2> /dev/null; ln -s #{current_path} ~/current"
   end
 
   desc "runs the executable in project/bin"
