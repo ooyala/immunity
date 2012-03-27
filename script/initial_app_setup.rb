@@ -11,9 +11,20 @@
 
 environment = ARGV[0] || "development"
 
-require File.expand_path(File.join(File.dirname(__FILE__), "system_setup_dsl.rb"))
+`bundle check > /dev/null`
+unless $?.to_i == 0
+  puts "running `bundle install` (this may take a minute)"
+  args = (environment == "production") ? "--without dev" : ""
+  output = `bundle install #{args}`
+  unless $?.to_i == 0
+    puts "`bundle install` failed:"
+    puts output
+  end
+end
 
-include SystemSetupDsl
+require "bundler/setup"
+require "terraform/dsl"
+include Terraform::Dsl
 
 def db_exists?(db_name)
   shell("#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null", :silent => true) rescue false
@@ -27,26 +38,7 @@ dep "create mysql immunity_system database" do
   meet { shell "#{mysqladmin_command} -u root create immunity_system" }
 end
 
-dep "bundle install" do
-  met? { shell("bundle check", :silent => true) rescue false }
-  meet do
-    # NOTE(philc): We *are* installing the test group because currently we run integration tests on the
-    # prod boxes.
-    args = (environment == "production") ? "--without dev" : ""
-    shell "bundle install --quiet #{args}"
-  end
-end
-
-dep "migrations" do
-  has_run_once = false
-  met? do
-    result = has_run_once
-    has_run_once = true
-    result
-  end
-
-  meet { shell "script/run_migrations.rb" }
-end
+ensure_run_once("migrations") { shell "script/run_migrations.rb" }
 
 # TODO(philc): Which repos to clone shouldn't be here as part of the deploy script, but rather a piece of
 # the app's configuration or settings.
