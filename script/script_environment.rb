@@ -2,7 +2,7 @@ require "bundler/setup"
 require "lib/ruby_extensions"
 require "config/environment"
 require "lib/models"
-require "lib/backtrace_cleaner"
+require "backtrace_shortener"
 
 # Make the developer experience better by shortening stacktraces.
-BacktraceCleaner.monkey_patch_all_exceptions!
+BacktraceShortener.monkey_patch_the_exception_class!

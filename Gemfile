@@ -21,6 +21,7 @@ gem "sinatra-contrib" # For Sinatra::Reloader
 gem "fezzik" # For deploying.
 gem "http_resque" # For integration testing our Resque jobs.
 gem "terraform" # For provisioning a system.
+gem "backtrace_shortener" # For making exception backtraces more friendly during development.
 
 group :dev do
   gem "wirble" # colorized irb script/console
