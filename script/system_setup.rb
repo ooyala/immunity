@@ -17,8 +17,11 @@ ensure_file("script/system_setup_files/.bashrc", "#{ENV['HOME']}/.bashrc")
 
 ensure_rbenv_ruby("1.9.2-p290")
 
-shell "sudo chgrp admin -R /etc/nginx/sites-enabled", :silent => true
-shell "sudo chmod g+w -R /etc/nginx/sites-enabled", :silent => true
+ensure_run_once("nginx site-enabled has correct permissions") do
+  shell "sudo chgrp admin -R /etc/nginx/sites-enabled", :silent => true
+  shell "sudo chmod g+w -R /etc/nginx/sites-enabled", :silent => true
+end
+
 ensure_file("script/system_setup_files/nginx_site.conf", "/etc/nginx/sites-enabled/immunity_system.conf") do
   shell "sudo /etc/init.d/nginx restart"
 end
