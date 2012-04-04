@@ -7,7 +7,7 @@
 # Usage:
 #   initial_app_setup.rb [envrionment=development]
 #
-# The "development" environment adds a few extras +not+++++ needed in production.
+# The "development" environment adds a few extras not needed in production.
 
 environment = ARGV[0] || "development"
 
