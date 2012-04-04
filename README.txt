@@ -1,5 +1,5 @@
 # Setting up for development
-./script/initial_setup.rb
+./script/initial_app_setup.rb
 
 # Running
 See the Procfile for the commands you can run to launch the web server, resque, and clockwork.
@@ -12,9 +12,6 @@ You'll need to already have mysql and redis-server already running.
 # Pulling in builds
 Fetch_commits will grab commits from repos found in ~/immunity_repos, so you'll need to clone
 some git repos into that directory in order to fetch builds.
-
-# Having the Immunity System deploy apps to your local disk (into /opt)
-You'll need to make sure that SSH is enabled on your mac (via System Preferences > Sharing > Enabling "Remote Login").
 
 Testing the Immunity System's deploy using Vagrant
 --------------------------------------------------
@@ -29,3 +26,5 @@ ssh root@immunity_system_vagrant
 
 # Deploy the immunity system to vagrant.
 bundle exec fez vagrant deploy
+
+# Read about Fezzik and read over config/tasks/deploy.rake.
