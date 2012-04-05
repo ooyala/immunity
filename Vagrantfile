@@ -2,7 +2,7 @@
 
 Vagrant::Config.run do |config|
 
-  config.vm.box = "base"
+  config.vm.box = "lucid32"
 
   # Forward a port from the guest to the host, which allows for outside computers to access the VM. You can
   # access the immunity server running inside of Vagrant on port 6102.
