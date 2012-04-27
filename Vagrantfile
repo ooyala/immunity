@@ -1,7 +1,8 @@
 # See vagrantup.com for complete documentation on what can go in this file.
 
 Vagrant::Config.run do |config|
-
+  config.vm.host_name = "immunity"
+  config.vm.box_url = "http://files.vagrantup.com/lucid32.box"
   config.vm.box = "lucid32"
 
   # Forward a port from the guest to the host, which allows for outside computers to access the VM. You can
