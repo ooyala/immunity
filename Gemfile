@@ -23,6 +23,10 @@ gem "http_resque" # For integration testing our Resque jobs.
 gem "terraform" # For provisioning a system.
 gem "backtrace_shortener" # For making exception backtraces more friendly during development.
 
+# For the log replayer.
+gem "eventmachine"
+gem "em-http-request"
+
 group :dev do
   gem "wirble" # colorized irb script/console
   gem "rerun"

@@ -1,6 +1,7 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    addressable (2.2.7)
     archive-tar-minitar (0.5.2)
     backports (2.3.0)
     backtrace_shortener (0.1.0)
@@ -11,7 +12,12 @@ GEM
     clockwork (0.3.4)
     colorize (0.5.8)
     daemons (1.1.6)
+    em-http-request (0.3.0)
+      addressable (>= 2.0.0)
+      escape_utils
+      eventmachine (>= 0.12.9)
     erubis (2.7.0)
+    escape_utils (0.2.4)
     eventmachine (0.12.10)
     fezzik (0.6.2)
       colorize (>= 0.5.8)
@@ -110,6 +116,8 @@ DEPENDENCIES
   backtrace_shortener
   bourbon
   clockwork
+  em-http-request
+  eventmachine
   fezzik
   foreman
   http_resque
