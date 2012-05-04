@@ -1,29 +1,27 @@
 require "simple_memoize"
 
 # This represents a deployable region (sandbox1, sandbox2) and all builds associated with that region.
-# Currently this model isn't a database table.
-class Region
-  attr_accessor :name
-  @@region_names = ["sandbox1", "sandbox2", "prod3"]
-  def self.region_names() @@region_names end
-
-  def initialize(name)
-    self.name = name
-  end
+class Region < Sequel::Model
+  many_to_one :applications
+  one_to_many :builds, :key => :current_region_id
+  one_to_many :build_statuses
 
   # The build in this region which is currently in progress.
   def in_progress_build
     active_states = ["deploying", "testing", "monitoring", "awaiting_confirmation"]
-    Build.reverse_order(:id).filter(:state => active_states).first(:current_region => self.name)
+    builds_dataset.reverse_order(:id).filter(:state => active_states).first
   end
 
+  # The next build in line that's awaiting deploy. TODO(philc): Rename this.
   def next_build
-    Build.order(:id.desc).first(:current_region => self.name, :state => "awaiting_deploy")
+    builds_dataset.order(:id.desc).first(:state => "awaiting_deploy")
   end
 
   def build_history
-    BuildStatus.order(:id.desc).filter(:region => self.name).limit(10).all
+    build_statuses_dataset.order(:id.desc).limit(10).all
   end
+
+  def requires_manual_deploy?() requires_manual_deploy end
 
   memoize :next_build, :in_progress_build, :build_history
 end
