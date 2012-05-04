@@ -6,21 +6,19 @@ require "timeout"
 
 class Build < Sequel::Model
   one_to_many :build_statuses
+  many_to_one :current_region, :class => Region
   add_association_dependencies :build_statuses => :destroy
 
   MONITORING_PERIOD_DURATION = 45 # seconds.
 
   REPO_DIRS = File.expand_path("~/immunity_repos/")
 
-  def initialize(values = {}, from_db = false)
-    super
-    self.current_region ||= Region.region_names.first
-  end
-
   def readable_name() "Build #{id} (#{short_commit})" end
 
   # An abbreviated commit SHA instead of the usual long SHA.
   def short_commit() (commit || "")[0..6] end
+
+  def application() self.current_region ? self.current_region.application : nil end
 
   state_machine :state, :initial => :awaiting_deploy do
 
@@ -113,50 +111,49 @@ class Build < Sequel::Model
   # False if there's another Build already being deployed to the current region.
   def region_is_available_for_deploy?
     nonblocking_states = %W(deploy_failed awaiting_confirmation testing_failed monitoring_failed awaiting_deploy)
-    blocked = Build.filter(:repo => repo, :current_region => current_region).
+    blocked = Build.filter(:repo => repo, :current_region_id => current_region_id).
         filter("state NOT IN ?", nonblocking_states).count > 0
     !blocked
   end
 
   # The next region in the deploy chain after the current region.
   def next_region
-    unless Region.region_names.include?(current_region)
-      raise "This build has a region which is no longer defined"
-    end
-    next_region = Region.region_names[Region.region_names.index(self.current_region) + 1]
-    next_region = "integration_test_#{next_region}" if current_region.include?("integration_test_")
+    next_region = application.regions[application.regions.index(self.current_region) + 1]
+    # TODO(philc): Figure out a better way to integration test this thing.
+    # next_region = "integration_test_#{next_region}" if current_region.include?("integration_test_")
     raise "Cannot pick a next region; this build's region is already the last." if next_region.nil?
     next_region
   end
 
-  def requires_manual_deploy?() self.current_region.include?("sandbox2") end
+  def requires_manual_deploy?() self.current_region.requires_manual_deploy? end
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
-  def requires_monitoring?() !self.current_region.include?("sandbox1") end
+  # TODO(philc): Add this a DB flag.
+  def requires_monitoring?() !self.current_region.name.include?("sandbox1") end
 
   def schedule_deploy
-    puts "scheduling deploy to #{current_region} #{state}"
-    Resque.enqueue(DeployBuild, repo, commit, current_region, id)
+    puts "scheduling deploy to #{current_region.name} #{state}"
+    Resque.enqueue(DeployBuild, repo, commit, current_region.id, id)
   end
 
   def schedule_test
-    puts "Scheduling testing for #{current_region} #{state}"
-    Resque.enqueue(RunTests, repo, current_region, id)
+    puts "Scheduling testing for #{current_region.name} #{state}"
+    Resque.enqueue(RunTests, repo, current_region.id, id)
   end
 
   def start_mirroring_traffic(from_region, to_region)
     puts "Beginning to mirror traffic."
-    run_command_with_timeout("bundle exec fez #{from_region} log_forwarding:start",
+    run_command_with_timeout("bundle exec fez #{from_region.name} log_forwarding:start",
         "html5player/api_server", 4)
-    run_command_with_timeout("bundle exec fez #{to_region} log_replay:start",
+    run_command_with_timeout("bundle exec fez #{to_region.name} log_replay:start",
         "html5player/api_server", 4)
   end
 
   def stop_mirroring_traffic(from_region, to_region)
     puts "Ceasing to mirror traffic."
-    run_command_with_timeout("bundle exec fez #{from_region} log_forwarding:stop",
+    run_command_with_timeout("bundle exec fez #{from_region.name} log_forwarding:stop",
         "html5player/api_server", 4)
-    run_command_with_timeout("bundle exec fez #{to_region} log_replay:stop",
+    run_command_with_timeout("bundle exec fez #{to_region.name} log_replay:stop",
         "html5player/api_server", 4)
   end
 
@@ -179,10 +176,10 @@ class Build < Sequel::Model
   def monitoring_stats(region = self.current_region)
     redis = Redis.new :host => "localhost"
     today = "2012-02-14" # TODO(philc): 
-    request_count = redis.get("#{region}_request_count").to_i
+    request_count = redis.get("#{region.name}_request_count").to_i
     errors = redis.get("html5player:error_count:#{today}").to_i
     error_rate = (request_count == 0) ? 0 : (errors / request_count.to_f * 100)
-    latency = (request_count == 0) ? 0 : redis.get("#{region}_latency").to_i / request_count
+    latency = (request_count == 0) ? 0 : redis.get("#{region.name}_latency").to_i / request_count
     {
       :request_count => request_count,
       :average_latency => latency,
@@ -204,10 +201,10 @@ class Build < Sequel::Model
 
   # A debugging method we use via ./script/console to make the system treat this build as a fresh new commit.
   def treat_as_new_commit!
-    self.current_region = "sandbox1"
+    self.current_region = self.application.regions.first
     self.state = "awaiting_deploy"
-    self.save
     self.build_statuses_dataset.destroy
+    self.save
     self.fire_events(:begin_deploy)
   end
 
