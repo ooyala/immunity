@@ -8,7 +8,6 @@ require "sass"
 require "bourbon"
 require "lib/sinatra_api_helpers"
 require "redis_log_reader"
-require "config/environment"
 
 class ImmunitySystem < Sinatra::Base
   include SinatraApiHelpers
@@ -36,9 +35,7 @@ class ImmunitySystem < Sinatra::Base
   # Views
   #
   get "/" do
-    regions = Region.region_names.map { |name| Region.new(name) }
-    # TODO(philc): We will pass in a list of regions to the frontend, not just a single build.
-    latest_build = Build.order(:id).last
+    regions = Region.all
     erb :"index.html", :locals => { :regions => regions }
   end
 
