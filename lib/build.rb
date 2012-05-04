@@ -133,12 +133,12 @@ class Build < Sequel::Model
 
   def schedule_deploy
     puts "scheduling deploy to #{current_region.name} #{state}"
-    Resque.enqueue(DeployBuild, repo, commit, current_region.id, id)
+    Resque.enqueue(DeployBuild, repo, commit, current_region.name, id)
   end
 
   def schedule_test
     puts "Scheduling testing for #{current_region.name} #{state}"
-    Resque.enqueue(RunTests, repo, current_region.id, id)
+    Resque.enqueue(RunTests, repo, current_region.name, id)
   end
 
   def start_mirroring_traffic(from_region, to_region)

@@ -130,9 +130,9 @@ class ImmunitySystem < Sinatra::Base
   # Mark a deploy as finished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region
+  # - region_id
   put "/builds/:id/deploy_status" do
-    enforce_required_json_keys(:status, :log, :region)
+    enforce_required_json_keys(:status, :log, :region_id)
     build_status = create_build_status("deploy", json_body)
     if json_body[:status] == "success"
       @build.fire_events(:deploy_succeeded)
@@ -146,9 +146,9 @@ class ImmunitySystem < Sinatra::Base
   # Mark testing as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region
+  # - region_id
   put "/builds/:id/testing_status" do
-    enforce_required_json_keys(:status, :log, :region)
+    enforce_required_json_keys(:status, :log, :region_id)
     build_status = create_build_status("testing", json_body)
 
     if json_body[:status] == "success"
@@ -163,9 +163,9 @@ class ImmunitySystem < Sinatra::Base
   # Mark monitoring as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region
+  # - region_id
   put "/builds/:id/monitoring_status" do
-    enforce_required_json_keys(:status, :log, :region)
+    enforce_required_json_keys(:status, :log, :region_id)
     build_status = create_build_status("monitoring", json_body)
 
     if json_body[:status] == "success"
@@ -201,17 +201,13 @@ class ImmunitySystem < Sinatra::Base
     status = json_body[:status]
     show_error(400, "Invalid status.") unless ["success", "failed"].include?(status)
     message = (status == "success") ? "#{stage} succeeded" : "#{stage} failed."
+    region = Region.first(:id => json_body[:region_id])
+    show_error(400, "Region with id #{json_body[:region_id]} doesn't exist") unless region
+    unless @build.application == region.application
+      show_error(400, "Region with id #{json_body[:region_id]} doesn't belong to this app")
+    end
     BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log],
-        :region => json_body[:region])
-  end
-
-  def save_build_status(build_id, stdout_text, stderr_text, message, region)
-    build_status = BuildStatus.create(:build_id => build_id)
-    build_status.stdout = stdout_text
-    build_status.stderr = stderr_text
-    build_status.message = "#{build_status.message}\n#{message}"
-    build_status.region = region
-    build_status.save
+        :region_id => region.id)
   end
 
   def enforce_valid_build(build_id)
