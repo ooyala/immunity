@@ -37,19 +37,28 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 200
   end
 
-  context "core deploy workflow" do
+  context "with test application" do
     setup_once do
       delete "/applications/#{TEST_APP}"
       create_application(:name => TEST_APP, :regions =>
           [{ :name => "sandbox1", :host => "localhost" }, { :name => "sandbox2", :host => "localhost" }])
       @@region = "sandbox1"
-      @@build_id = create_build(TEST_APP, :current_region => @@region, :application => TEST_APP)["id"]
+    end
+
+    should "prevent two builds from being deployed into the same region at the same time" do
+      build1 = create_build(TEST_APP, :current_region => @@region)["id"]
+      assert_equal "deploying", get_build(build1)["state"]
+      build2 = create_build(TEST_APP, :current_region => @@region)["id"]
+      assert_equal "awaiting_deploy", get_build(build2)["state"]
+      delete_build(build1)
+      delete_build(build2)
     end
 
     should "progress the build from deploy to testing and then to the next region" do
-      next
+      @@build_id = create_build(TEST_APP, :current_region => @@region, :application => TEST_APP)["id"]
       assert_equal "deploying", get_build(@@build_id)["state"]
 
+      next
       put "/builds/#{@@build_id}/deploy_status", {},
           { :status => "success", :log => "Deploy details...", :region => @@region }.to_json
       assert_status 200

@@ -15,9 +15,16 @@ TEST_APP = "integration_testing_app"
 #
 module BuildRequestHelpers
   def get_build(id)
+    raise "#{id} is not a string or an int" unless (id.is_a?(String) || id.is_a?(Fixnum))
     get "/builds/#{id}"
     assert_status 200
     json_response
+  end
+
+  def delete_build(id)
+    raise "#{id} is not a string or an int" unless (id.is_a?(String) || id.is_a?(Fixnum))
+    delete "/builds/#{id}"
+    assert_status 200
   end
 
   def create_build(app_name, options = {})

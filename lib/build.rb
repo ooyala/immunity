@@ -111,8 +111,7 @@ class Build < Sequel::Model
   # False if there's another Build already being deployed to the current region.
   def region_is_available_for_deploy?
     nonblocking_states = %W(deploy_failed awaiting_confirmation testing_failed monitoring_failed awaiting_deploy)
-    blocked = Build.filter(:repo => repo, :current_region_id => current_region_id).
-        filter("state NOT IN ?", nonblocking_states).count > 0
+    blocked = current_region.builds_dataset.filter("state NOT IN ?", nonblocking_states).count > 0
     !blocked
   end
 
