@@ -1,6 +1,9 @@
 require "simple_memoize"
 
 # This represents a deployable region (e.g. "sandbox1" or "sandbox2") and all builds associated with that region.
+# Columns:
+#   - ordinal: the ordering position of this region within an app's list of regions. Every region in the app
+#     should have a different ordinal number. "prod1" should have 0, "prod2" should have 1, etc.
 class Region < Sequel::Model
   many_to_one :application
   one_to_many :builds, :key => :current_region_id

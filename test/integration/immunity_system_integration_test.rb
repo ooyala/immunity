@@ -45,6 +45,10 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       @@region = "sandbox1"
     end
 
+    teardown_once do
+      delete "/applications/#{TEST_APP}"
+    end
+
     should "prevent two builds from being deployed into the same region at the same time" do
       build1 = create_build(TEST_APP, :current_region => @@region)["id"]
       assert_equal "deploying", get_build(build1)["state"]
