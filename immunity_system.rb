@@ -86,15 +86,32 @@ class ImmunitySystem < Sinatra::Base
   # APIs
   #
 
+  # Create a new application and its regions. Used by our integration tests.
+  # An example request body:
+  # { regions: [{ name: "prod1", host: "prod1.example.com" }] }
+  put "/applications/:name" do
+    enforce_required_json_keys(:regions)
+    Application.create_application_from_hash(params[:name], json_body)
+    nil
+  end
+
+  delete "/applications/:name" do
+    halt 404 unless app = Application.first(:name => params[:name])
+    app.destroy
+    nil
+  end
+
   # Create a new Build. Used by our integration tests.
   # - commit
   # - current_region
-  # - repo
-  post "/builds" do
-    enforce_required_json_keys(:current_region, :commit, :repo)
-    build = Build.create(:current_region => json_body[:current_region],
-        :is_test_build => json_body[:is_test_build], :commit => json_body[:commit],
-        :repo => json_body[:repo])
+  post "/applications/:app_name/builds" do
+    enforce_required_json_keys(:current_region, :commit)
+    application = Application.first(:name => params[:app_name])
+    halt 400, "Application #{params[:app_name]} doesn't exist." unless application
+    region = application.region_with_name(json_body[:current_region])
+    halt 400, "Region #{json_body[:current_region]} doesn't exist." unless region
+    build = Build.create(:current_region_id => region.id, :is_test_build => json_body[:is_test_build],
+        :commit => json_body[:commit])
     # NOTE(philc): you can set the state of a build without jumping through the state machine. Use this
     # carefully. It's useful for integration tests, but we may want to remove it if these APIs are ever
     # used by anyone else.
@@ -130,10 +147,10 @@ class ImmunitySystem < Sinatra::Base
   # Mark a deploy as finished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region_id
+  # - region
   put "/builds/:id/deploy_status" do
-    enforce_required_json_keys(:status, :log, :region_id)
-    build_status = create_build_status("deploy", json_body)
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status(@build, "deploy", json_body)
     if json_body[:status] == "success"
       @build.fire_events(:deploy_succeeded)
       @build.fire_events(:begin_testing)
@@ -146,10 +163,10 @@ class ImmunitySystem < Sinatra::Base
   # Mark testing as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region_id
+  # - region
   put "/builds/:id/testing_status" do
-    enforce_required_json_keys(:status, :log, :region_id)
-    build_status = create_build_status("testing", json_body)
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status(@build, "testing", json_body)
 
     if json_body[:status] == "success"
       @build.fire_events(:testing_succeeded)
@@ -163,10 +180,10 @@ class ImmunitySystem < Sinatra::Base
   # Mark monitoring as finiished.
   # - status: "success" or "failed".
   # - log: detailed log information.
-  # - region_id
+  # - region
   put "/builds/:id/monitoring_status" do
-    enforce_required_json_keys(:status, :log, :region_id)
-    build_status = create_build_status("monitoring", json_body)
+    enforce_required_json_keys(:status, :log, :region)
+    build_status = create_build_status(@build, "monitoring", json_body)
 
     if json_body[:status] == "success"
       @build.fire_events(:monitoring_succeeded)
@@ -197,15 +214,12 @@ class ImmunitySystem < Sinatra::Base
 
   # Creates a BuildStatus entry which records the state of the build.
   # - stage: one of "deploy", "testing", "monitoring"
-  def create_build_status(stage, json_body)
+  def create_build_status(build, stage, json_body)
     status = json_body[:status]
     show_error(400, "Invalid status.") unless ["success", "failed"].include?(status)
     message = (status == "success") ? "#{stage} succeeded" : "#{stage} failed."
-    region = Region.first(:id => json_body[:region_id])
-    show_error(400, "Region with id #{json_body[:region_id]} doesn't exist") unless region
-    unless @build.application == region.application
-      show_error(400, "Region with id #{json_body[:region_id]} doesn't belong to this app")
-    end
+    region = build.application.region_with_name(json_body[:region])
+    show_error(400, "Region #{json_body[:region]} doesn't exist for this app.") unless region
     BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log],
         :region_id => region.id)
   end

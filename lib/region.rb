@@ -1,10 +1,11 @@
 require "simple_memoize"
 
-# This represents a deployable region (sandbox1, sandbox2) and all builds associated with that region.
+# This represents a deployable region (e.g. "sandbox1" or "sandbox2") and all builds associated with that region.
 class Region < Sequel::Model
-  many_to_one :applications
+  many_to_one :application
   one_to_many :builds, :key => :current_region_id
   one_to_many :build_statuses
+  add_association_dependencies :builds => :destroy, :build_statuses => :destroy
 
   # The build in this region which is currently in progress.
   def in_progress_build

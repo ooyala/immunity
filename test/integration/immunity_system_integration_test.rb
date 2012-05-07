@@ -20,27 +20,34 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 200
   end
 
-  should "create and delete a build" do
-    build_id = create_build["id"]
+  should "create an application configuration" do
+    app_name = "testing"
+    delete "/applications/#{app_name}"
 
-    get "/builds/#{build_id}"
+    # TODO(philc): We need to set a repo name, and prevent it from scheduling a deploy.
+    app_config = { :regions => [{ :name => "howdy", :host => "localhost" }] }
+    put "/applications/#{app_name}", {}, app_config.to_json
     assert_status 200
 
-    delete "/builds/#{build_id}"
+    build = create_build(app_name, :current_region => "howdy")
+    delete "/builds/#{build['id']}"
     assert_status 200
 
-    get "/builds/#{build_id}"
-    assert_status 404
+    delete "/applications/#{app_name}"
+    assert_status 200
   end
-
 
   context "core deploy workflow" do
     setup_once do
-      @@region = "integration_test_sandbox2"
-      @@build_id = create_build(:current_region => @@region)["id"]
+      delete "/applications/#{TEST_APP}"
+      create_application(:name => TEST_APP, :regions =>
+          [{ :name => "sandbox1", :host => "localhost" }, { :name => "sandbox2", :host => "localhost" }])
+      @@region = "sandbox1"
+      @@build_id = create_build(TEST_APP, :current_region => @@region, :application => TEST_APP)["id"]
     end
 
     should "progress the build from deploy to testing and then to the next region" do
+      next
       assert_equal "deploying", get_build(@@build_id)["state"]
 
       put "/builds/#{@@build_id}/deploy_status", {},

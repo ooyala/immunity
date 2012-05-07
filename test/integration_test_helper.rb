@@ -8,6 +8,7 @@ require "minitest/autorun"
 # The Resque queue to enqueue new jobs into when running the tests. Jobs in this queue will not be picked up
 # by our normal Resque workers.
 TEST_QUEUE = "integration_testing"
+TEST_APP = "integration_testing_app"
 
 #
 # Convenience methods for making requests for builds.
@@ -19,13 +20,18 @@ module BuildRequestHelpers
     json_response
   end
 
-  def create_build(options = {})
+  def create_build(app_name, options = {})
     options = {
-      :current_region => "integration_test_sandbox1", :commit => "test_commit",
-      :repo => "integration_test_repo", :is_test_build => true
+      :current_region => "integration_test_sandbox1", :commit => "test_commit"
     }.merge(options)
-    post "/builds", {}, options.to_json
+    post "/applications/#{app_name}/builds", {}, options.to_json
     assert_status 200
     json_response
+  end
+
+  def create_application(properties)
+    properties = { :name => TEST_APP }.merge(properties)
+    put "/applications/#{properties[:name]}", {}, properties.to_json
+    assert_status 200
   end
 end
