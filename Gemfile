@@ -31,6 +31,7 @@ group :dev do
   gem "wirble" # colorized irb script/console
   gem "rerun"
   gem "vagrant", ">= 1.0.1"
+  gem "watchr" # for auto-running tests when files change.
 end
 
 group :test do
