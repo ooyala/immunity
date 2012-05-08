@@ -2,6 +2,11 @@ require "simple_memoize"
 require "lib/sinatra_api_helpers" # for symbolize_hash_keys.
 
 # This represents an application that Immunity is managing.
+# Columns:
+# - name
+# - active: if false, builds are not run from this application.
+# - is_test: indicates that this is a test app used for integration testing. Builds in this app will
+#   skip certain phases.
 class Application < Sequel::Model
   one_to_many :regions, :order => :ordinal.asc
   add_association_dependencies :regions => :destroy
@@ -15,6 +20,7 @@ class Application < Sequel::Model
   #   { "regions": [{ name: "prod1", host: "prod1.example.com" }, ... ] }
   def update_from_properties_hash(properties_hash)
     DB.transaction do
+      self.is_test = (properties_hash[:is_test] == true)
       new_regions = properties_hash[:regions]
       region_names = new_regions.map { |region| region[:name].to_s }
       self.regions.reject { |region| region_names.include?(region.name) }.each(&:destroy)
@@ -23,9 +29,11 @@ class Application < Sequel::Model
         db_region = Region.find_or_create(:name => region[:name], :application_id => self.id)
         db_region.host = region[:host]
         db_region.ordinal = index
-        db_region.requires_manual_approval = (region[:manual_approval] == true)
+        db_region.requires_manual_approval = (region[:requires_manual_approval] == true)
+        db_region.requires_monitoring = (region[:requires_monitoring] == true)
         db_region.save
       end
+      self.save
     end
     nil
   end
@@ -36,6 +44,8 @@ class Application < Sequel::Model
     app.update_from_properties_hash(properties_hash)
     app
   end
+
+  def is_test?() is_test end
 
   memoize :region_with_name
 end
