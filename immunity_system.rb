@@ -87,6 +87,9 @@ class ImmunitySystem < Sinatra::Base
   #
 
   # Create a new application and its regions. Used by our integration tests.
+  # - regions: a list of regions for this app.
+  # - is_test: true if this is a test build for integration testing purposes.
+  #
   # An example request body:
   # { regions: [{ name: "prod1", host: "prod1.example.com" }] }
   put "/applications/:name" do
@@ -130,7 +133,11 @@ class ImmunitySystem < Sinatra::Base
   end
 
   get "/builds/:id" do
-    @build.to_json
+    {
+      id: @build.id,
+      current_region: @build.current_region.name,
+      state: @build.state,
+    }.to_json
   end
 
   # Private, used only by our integration tests. This needs to come before the delete "/builds/:id" route.
