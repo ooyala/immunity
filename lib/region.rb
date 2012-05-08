@@ -25,7 +25,8 @@ class Region < Sequel::Model
     build_statuses_dataset.order(:id.desc).limit(10).all
   end
 
-  def requires_manual_deploy?() requires_manual_deploy end
+  def requires_manual_approval?() requires_manual_approval end
+  def requires_monitoring?() requires_monitoring end
 
   memoize :next_build, :in_progress_build, :build_history
 end
