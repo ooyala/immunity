@@ -47,7 +47,7 @@ class Build < Sequel::Model
 
     event :testing_succeeded do
       transition :testing => :monitoring, :if => :requires_monitoring?
-      transition :testing => :awaiting_deploy
+      transition :testing => :awaiting_deploy, :if => proc { |build| !build.requires_monitoring? }
     end
 
     event :monitoring_failed do
@@ -55,9 +55,8 @@ class Build < Sequel::Model
     end
 
     event :monitoring_succeeded do
-      transition :monitoring => :awaiting_confirmation, :if => :requires_manual_deploy?
-      # TODO(philc): This is the wrong state transition. Fix.
-      transition :monitoring => :deploying
+      transition :monitoring => :awaiting_confirmation, :if => :requires_manual_approval?
+      transition :monitoring => :deploying, :if => proc { |build| !build.requires_manual_approval? }
     end
 
     event :manual_deploy_confirmed do
@@ -72,17 +71,17 @@ class Build < Sequel::Model
     end
 
     after_transition any => :deploying do
-      schedule_deploy() unless is_test_build?
+      schedule_deploy() unless application.is_test?
     end
 
     after_transition any => :testing do
-      schedule_test() unless is_test_build?
+      schedule_test() unless application.is_test?
     end
 
     after_transition any => :monitoring do
       # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
       begin
-        start_mirroring_traffic("prod3", current_region) unless is_test_build?
+        start_mirroring_traffic("prod3", current_region) unless application.is_test?
       rescue => error
         log_transition_failure("monitoring failed", error.detailed_to_s)
         self.fire_events(:monitoring_failed)
@@ -92,7 +91,7 @@ class Build < Sequel::Model
     after_transition :monitoring => any do
       # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
       begin
-        stop_mirroring_traffic("prod3", current_region) unless is_test_build?
+        stop_mirroring_traffic("prod3", current_region) unless application.is_test?
       rescue => error
         log_transition_failure("monitoring failed", error.detailed_to_s)
         self.fire_events(:monitoring_failed) unless state == "monitoring_failed"
@@ -100,7 +99,7 @@ class Build < Sequel::Model
     end
 
     after_transition any => :deploy_failed do
-      notify_deploy_failed unless is_test_build?
+      notify_deploy_failed unless application.is_test?
     end
 
     after_transition any => any do
@@ -117,18 +116,15 @@ class Build < Sequel::Model
 
   # The next region in the deploy chain after the current region.
   def next_region
-    next_region = application.regions[application.regions.index(self.current_region) + 1]
-    # TODO(philc): Figure out a better way to integration test this thing.
-    # next_region = "integration_test_#{next_region}" if current_region.include?("integration_test_")
+    next_region = application.regions[application.regions.index(current_region) + 1]
     raise "Cannot pick a next region; this build's region is already the last." if next_region.nil?
     next_region
   end
 
-  def requires_manual_deploy?() self.current_region.requires_manual_deploy? end
+  def requires_manual_approval?() self.current_region.requires_manual_approval? end
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
-  # TODO(philc): Add this a DB flag.
-  def requires_monitoring?() !self.current_region.name.include?("sandbox1") end
+  def requires_monitoring?() self.current_region.requires_monitoring? end
 
   def schedule_deploy
     puts "scheduling deploy to #{current_region.name} #{state}"
@@ -206,7 +202,4 @@ class Build < Sequel::Model
     self.save
     self.fire_events(:begin_deploy)
   end
-
-  def is_test_build?() self.is_test_build end
-
 end

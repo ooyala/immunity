@@ -40,8 +40,10 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
   context "with test application" do
     setup_once do
       delete "/applications/#{TEST_APP}"
-      create_application(:name => TEST_APP, :regions =>
-          [{ :name => "sandbox1", :host => "localhost" }, { :name => "sandbox2", :host => "localhost" }])
+      create_application(:name => TEST_APP, :is_test => true, :regions =>
+          [{ :name => "sandbox1", :host => "localhost", :requires_monitoring => true,
+             :requires_manual_approval => true },
+           { :name => "sandbox2", :host => "localhost" }])
       @@region = "sandbox1"
     end
 
@@ -59,12 +61,11 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     end
 
     should "progress the build from deploy to testing and then to the next region" do
-      # TODO(philc): do not skip tests
-      next
       build_id = create_build(TEST_APP, :current_region => @@region, :application => TEST_APP)["id"]
       assert_equal "deploying", get_build(build_id)["state"]
 
-      # I think I need a flag to skip monitoring, skip deploys, skip testing.
+      # Since this app is a test_app, we will transition to the various stages, but perform no real work,
+      # like doing an actual deploy.
       put "/builds/#{build_id}/deploy_status", {},
           { :status => "success", :log => "Deploy details...", :region => @@region }.to_json
       assert_status 200

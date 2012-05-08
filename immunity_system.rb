@@ -177,7 +177,6 @@ class ImmunitySystem < Sinatra::Base
 
     if json_body[:status] == "success"
       @build.fire_events(:testing_succeeded)
-      @build.fire_events(:begin_deploy)
     else
       @build.fire_events(:testing_failed)
     end
