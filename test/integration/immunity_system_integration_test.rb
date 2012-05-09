@@ -81,8 +81,9 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       assert_status 200
       assert_equal "awaiting_confirmation", get_build(build_id)["state"]
 
-      delete "/builds/#{@build_id}"
+      delete_build(build_id)
     end
+
   end
 
 end
