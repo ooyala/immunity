@@ -4,6 +4,8 @@ require "resque_jobs/run_tests"
 require "lib/build_status"
 require "timeout"
 
+# NOTE(philc): Be careful when developing; some types of changes to this state machine do not completely
+# unload and reload with Sinatra reloader.
 class Build < Sequel::Model
   one_to_many :build_statuses
   many_to_one :current_region, :class => Region
