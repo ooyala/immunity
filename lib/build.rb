@@ -3,6 +3,7 @@ require "resque_jobs/deploy_build"
 require "resque_jobs/run_tests"
 require "lib/build_status"
 require "timeout"
+require "rest_client"
 
 # NOTE(philc): Be careful when developing; some types of changes to this state machine do not completely
 # unload and reload with Sinatra reloader.
@@ -81,19 +82,16 @@ class Build < Sequel::Model
     end
 
     after_transition any => :monitoring do
-      # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
-      begin
-        start_mirroring_traffic("prod3", current_region) unless application.is_test?
-      rescue => error
-        log_transition_failure("monitoring failed", error.detailed_to_s)
-        self.fire_events(:monitoring_failed)
+      unless application.is_test?
+        start_mirroring_traffic(application.next_region(current_region), current_region)
       end
     end
 
     after_transition :monitoring => any do
-      # TODO(philc): This mirroring source shouldn't be hard-coded to prod3.
       begin
-        stop_mirroring_traffic("prod3", current_region) unless application.is_test?
+        unless application.is_test?
+          stop_mirroring_traffic(application.next_region(current_region), current_region)
+        end
       rescue => error
         log_transition_failure("monitoring failed", error.detailed_to_s)
         self.fire_events(:monitoring_failed) unless state == "monitoring_failed"
@@ -126,10 +124,13 @@ class Build < Sequel::Model
   def requires_manual_approval?() self.current_region.requires_manual_approval? end
 
   # The first sandbox is deployed to continuously and doesn't run production monitoring using mirroed traffic.
-  def requires_monitoring?() self.current_region.requires_monitoring? end
+  def requires_monitoring?
+    has_next_region = !application.next_region(current_region).nil?
+    has_next_region && current_region.requires_monitoring?
+  end
 
   def schedule_deploy
-    puts "scheduling deploy to #{current_region.name} #{state}"
+    puts "Scheduling deploy to #{current_region.name} #{state}"
     Resque.enqueue(DeployBuild, repo, commit, current_region.name, id)
   end
 
@@ -139,19 +140,33 @@ class Build < Sequel::Model
   end
 
   def start_mirroring_traffic(from_region, to_region)
-    puts "Beginning to mirror traffic."
-    run_command_with_timeout("bundle exec fez #{from_region.name} log_forwarding:start",
-        "html5player/api_server", 4)
-    run_command_with_timeout("bundle exec fez #{to_region.name} log_replay:start",
-        "html5player/api_server", 4)
+    puts "Beginning to mirror traffic from #{from_region.name} to region #{to_region.name}"
+    # TODO(philc): this log_file_name should be part of the app's configuration.
+    redis_queue = "log_forwarding:#{application.name}:#{from_region.name}"
+    begin
+      RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status",
+          :enabled => true,
+          # TODO(philc): Do not hard code this log file name.
+          :log_file_name => "/opt/ooyala/player_api/logs/log.txt",
+          :redis_host => LOG_FORWARDING_REDIS_HOST,
+          :redis_queue => redis_queue)
+    rescue Errno::ECONNREFUSED, RestClient::Exception => error
+      details = error.respond_to?(:response) ? response.body : ""
+      details += error.backtrace.join("\n")
+      log_transition_failure(error.message, details)
+      fire_events(:monitoring_failed)
+    end
+
+    # TODO(philc): Start log replay.
+
   end
 
   def stop_mirroring_traffic(from_region, to_region)
-    puts "Ceasing to mirror traffic."
-    run_command_with_timeout("bundle exec fez #{from_region.name} log_forwarding:stop",
-        "html5player/api_server", 4)
-    run_command_with_timeout("bundle exec fez #{to_region.name} log_replay:stop",
-        "html5player/api_server", 4)
+    puts "Stopping to mirror traffic from #{from_region.name} to region #{to_region.name}"
+    # RestClient.post "#{from_region.host}:#{LOG_FORWARDER_PORT}/status", :enabled => false
+
+    # TODO(philc): Stop log replay.
+
   end
 
   # TODO(philc): We should issue these commands in a nonblocking fashion.
@@ -187,7 +202,7 @@ class Build < Sequel::Model
 
   # Creates a BuildStatus for this build, with the given details.
   def log_transition_failure(message, further_details)
-    BuildStatus.create(:build_id => self.id, :region => self.current_region,
+    BuildStatus.create(:build_id => self.id, :region_id => current_region.id,
         :message => message, :stdout => further_details)
   end
 
