@@ -118,7 +118,7 @@ class Build < Sequel::Model
 
   # The next region in the deploy chain after the current region.
   def next_region
-    next_region = application.regions[application.regions.index(current_region) + 1]
+    next_region = application.next_region(current_region)
     raise "Cannot pick a next region; this build's region is already the last." if next_region.nil?
     next_region
   end

@@ -45,6 +45,10 @@ class Application < Sequel::Model
     app
   end
 
+  # The next region in the deploy chain after the current region. Returns nil if there is no region after
+  # current_region.
+  def next_region(current_region) regions[regions.index(current_region) + 1] end
+
   def is_test?() is_test end
 
   memoize :region_with_name
