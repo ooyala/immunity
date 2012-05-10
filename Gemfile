@@ -42,4 +42,5 @@ group :test do
   # gem "gamut"
   gem "scope"
   gem "remote_http_testing"
+  gem "rr" # for mocking & stubbign during unit testing.
 end
