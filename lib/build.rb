@@ -58,8 +58,9 @@ class Build < Sequel::Model
     end
 
     event :monitoring_succeeded do
+      transition :monitoring => :monitoring_failed, :unless => :halt_mirroring
       transition :monitoring => :awaiting_confirmation, :if => :requires_manual_approval?
-      transition :monitoring => :deploying, :if => proc { |build| !build.requires_manual_approval? }
+      transition :monitoring => :awaiting_deploy, :if => proc { |build| !build.requires_manual_approval? }
     end
 
     event :manual_deploy_confirmed do
@@ -69,6 +70,11 @@ class Build < Sequel::Model
     #
     # Operations which occur when state changes.
     #
+
+    after_transition :monitoring => :monitoring_failed do
+      halt_mirroring
+    end
+
     after_transition any => :awaiting_deploy do |transition|
       self.current_region = next_region
     end
@@ -84,17 +90,6 @@ class Build < Sequel::Model
     after_transition any => :monitoring do
       unless application.is_test?
         start_mirroring_traffic(application.next_region(current_region), current_region)
-      end
-    end
-
-    after_transition :monitoring => any do
-      begin
-        unless application.is_test?
-          stop_mirroring_traffic(application.next_region(current_region), current_region)
-        end
-      rescue => error
-        log_transition_failure("monitoring failed", error.detailed_to_s)
-        self.fire_events(:monitoring_failed) unless state == "monitoring_failed"
       end
     end
 
@@ -141,19 +136,16 @@ class Build < Sequel::Model
 
   def start_mirroring_traffic(from_region, to_region)
     puts "Beginning to mirror traffic from #{from_region.name} to region #{to_region.name}"
-    # TODO(philc): this log_file_name should be part of the app's configuration.
     redis_queue = "log_forwarding:#{application.name}:#{from_region.name}"
     begin
       RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status",
           :enabled => true,
-          # TODO(philc): Do not hard code this log file name.
+          # TODO(philc): this log_file_name should be part of the app's configuration.
           :log_file_name => "/opt/ooyala/player_api/logs/log.txt",
           :redis_host => LOG_FORWARDING_REDIS_HOST,
           :redis_queue => redis_queue)
     rescue Errno::ECONNREFUSED, RestClient::Exception => error
-      details = error.respond_to?(:response) ? response.body : ""
-      details += error.backtrace.join("\n")
-      log_transition_failure(error.message, details)
+      log_monitoring_failure(error)
       fire_events(:monitoring_failed)
     end
 
@@ -161,12 +153,31 @@ class Build < Sequel::Model
 
   end
 
+  # Returns true if successful.
   def stop_mirroring_traffic(from_region, to_region)
-    puts "Stopping to mirror traffic from #{from_region.name} to region #{to_region.name}"
-    # RestClient.post "#{from_region.host}:#{LOG_FORWARDER_PORT}/status", :enabled => false
+    puts "Stopping to mirror traffic from #{from_region.name}."
+    error = nil
+    begin
+      RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status", :enabled => false)
+    rescue Errno::ECONNREFUSED, RestClient::Exception => error
+      log_monitoring_failure(error)
+    end
 
-    # TODO(philc): Stop log replay.
+    return error.nil?
 
+    # TODO(philc): Stop the log replay.
+
+  end
+
+  def halt_mirroring()
+    return true if application.is_test?
+    stop_mirroring_traffic(current_region, next_region)
+  end
+
+  def log_monitoring_failure(raised_error)
+    details = raised_error.respond_to?(:response) ? raised_error.response.body : ""
+    details += raised_error.backtrace.join("\n")
+    log_transition_failure(raised_error.message, details)
   end
 
   # TODO(philc): We should issue these commands in a nonblocking fashion.
