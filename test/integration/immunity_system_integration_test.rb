@@ -11,7 +11,6 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
 
   setup_once do
     ensure_reachable!(server)
-    assert_status 200
   end
 
   should "return a 200 for /" do

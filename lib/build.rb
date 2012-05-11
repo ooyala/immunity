@@ -196,7 +196,7 @@ class Build < Sequel::Model
 
   # TODO(philc): Rip this out of here and put it into a separate object which records the summary data about
   # monitoring. It was put here for demo reasons.
-  def monitoring_stats(region = self.current_region)
+  def monitoring_stats(region = current_region)
     redis = Redis.new :host => "localhost"
     today = "2012-02-14" # TODO(philc): 
     request_count = redis.get("#{region.name}_request_count").to_i

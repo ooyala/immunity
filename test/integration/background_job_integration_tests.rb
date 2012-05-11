@@ -14,19 +14,26 @@ class MonitoringJobIntegrationTest < Scope::TestCase
   setup_once do
     ensure_reachable!(server)
     ensure_reachable!(RESQUE_SERVER)
-    delete "/builds/test_builds"
+
+    delete "/applications/#{TEST_APP}"
+    create_application(:name => TEST_APP, :is_test => true, :regions =>
+        [{ :name => "sandbox1", :host => "localhost", :requires_monitoring => true,
+           :requires_manual_approval => true },
+         { :name => "sandbox2", :host => "localhost" }])
+
     use_server(RESQUE_SERVER) { delete "/queues/#{TEST_QUEUE}/jobs" }
     assert_status 200
   end
 
   context "monitoring" do
     setup_once do
-      @@region = "integration_test_sandbox2"
+      @@region = "sandbox1"
       @@job_args = { :region => @@region, :monitoring_period_duration => 0 }
     end
 
     should "report success when latency is below our upper bound" do
-      build_id = create_build(:current_region => @@region, :state => "monitoring")["id"]
+      build_id = create_build(TEST_APP, :current_region => @@region, :state => "monitoring")["id"]
+
       job_args = @@job_args.merge(:latency_upper_bound => 1000)
 
       use_server(RESQUE_SERVER) do
@@ -41,7 +48,7 @@ class MonitoringJobIntegrationTest < Scope::TestCase
     end
 
     should "report failure when laatency is above our upper bound" do
-      build_id = create_build(:current_region => @@region, :state => "monitoring")["id"]
+      build_id = create_build(TEST_APP, :current_region => @@region, :state => "monitoring")["id"]
       job_args = @@job_args.merge(:latency_upper_bound => -1)
 
       use_server(RESQUE_SERVER) do
@@ -58,7 +65,6 @@ class MonitoringJobIntegrationTest < Scope::TestCase
 
   context "fetch commits" do
     should "successfully access git" do
-      # Running `git fetch` will fail if the git/ssh credentials are not setup properly, so verify they are.
       use_server(RESQUE_SERVER) do
         job_args = { :repos => ["html5player"] }
         post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "FetchCommits", :arguments => [job_args] }.to_json
@@ -71,6 +77,6 @@ class MonitoringJobIntegrationTest < Scope::TestCase
   end
 
   teardown_once do
-    delete "/builds/test_builds"
+    delete "/applications/#{TEST_APP}"
   end
 end

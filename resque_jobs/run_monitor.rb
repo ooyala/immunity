@@ -23,14 +23,14 @@ class RunMonitor
   LATENCY_UPPER_BOUND = 1000
 
   # The arguments hash is used by our integration tests to test each main logic path.
-  # - region: the region to search for builds which have completed monitoring.
+  # - monitoring_period_duration: how long after log replay began before we check on the app metrics.
+  # - latency_upper_bound: in milliseconds.
   def self.perform(arguments = {})
     setup_logger("run_monitor.log")
 
     monitoring_period = Time.now -
         (arguments["monitoring_period_duration"] || Build::MONITORING_PERIOD_DURATION)
     build_dataset = Build.filter(:state => "monitoring").filter("updated_at <= ?", monitoring_period)
-    build_dataset = build_dataset.filter(:current_region => arguments["region"]) if arguments["region"]
     build = build_dataset.first
     return if build.nil?
 
@@ -46,18 +46,18 @@ class RunMonitor
         message = "Monitoring failed. Latency is #{stats[:average]}."
         puts message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-            { :status => "failed", :log => message, :region => build.current_region }.to_json
+            { :status => "failed", :log => message, :region => build.current_region.name }.to_json
       else
         message = "Monitoring succeeded."
         puts message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-            { :status => "success", :log => message, :region => build.current_region }.to_json
+            { :status => "success", :log => message, :region => build.current_region.name }.to_json
       end
     rescue Exception => error
       message = error.detailed_to_s
       puts "Monitor failed with error #{message}."
       RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
-          { :status => "failed", :log => message, :region => build.current_region }.to_json
+          { :status => "failed", :log => message, :region => build.current_region.name }.to_json
     end
   end
 
