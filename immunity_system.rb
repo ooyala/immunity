@@ -128,7 +128,6 @@ class ImmunitySystem < Sinatra::Base
   end
 
   before "/builds/:id/?*" do
-    return if params[:id] == "test_builds"
     @build = enforce_valid_build(params[:id])
   end
 
@@ -138,12 +137,6 @@ class ImmunitySystem < Sinatra::Base
       current_region: @build.current_region.name,
       state: @build.state,
     }.to_json
-  end
-
-  # Private, used only by our integration tests. This needs to come before the delete "/builds/:id" route.
-  delete "/builds/test_builds" do
-    Build.filter(:is_test_build => true).destroy
-    nil
   end
 
   delete "/builds/:id" do

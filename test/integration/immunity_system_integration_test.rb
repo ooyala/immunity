@@ -11,7 +11,6 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
 
   setup_once do
     ensure_reachable!(server)
-    delete "/builds/test_builds"
     assert_status 200
   end
 
