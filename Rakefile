@@ -13,11 +13,16 @@ Fezzik.init(:tasks => "config/tasks")
 require "config/deploy_config"
 
 namespace :test do
+  Rake::TestTask.new(:units) do |task|
+    task.libs << "test"
+    task.test_files = FileList["test/unit/*"]
+  end
+
   Rake::TestTask.new(:integrations) do |task|
     task.libs << "test"
     task.test_files = FileList["test/integration/*"]
   end
 end
 
-task :test => "test:integrations"
+task :test => ["test:units", "test:integrations"]
 
