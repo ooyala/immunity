@@ -7,9 +7,10 @@ IMMUNITY_APPS = {
   :api_server => {
     :regions => [
       { :name => "sandbox1", :host => "papi-ci.us-east-1.ooyala.com" },
+      # TODO(philc): Change papi1 and papi2 to "requires_monitoring => true" once we have monitoring ready.
       { :name => "sandbox2", :host => "papi1.us-east-1.ooyala.com", :requires_manual_approval => true,
-        :requires_monitoring => true },
-      { :name => "prod3", :host => "papi2.us-east-1.ooyala.com", :requires_monitoring => true },
+        :requires_monitoring => false },
+      { :name => "prod3", :host => "papi2.us-east-1.ooyala.com", :requires_monitoring => false },
       { :name => "prod4", :host => "papi3.us-east-1.ooyala.com", :requires_monitoring => false }
     ]
   }
