@@ -10,6 +10,9 @@ require "lib/sinatra_api_helpers" # for symbolize_hash_keys.
 class Application < Sequel::Model
   one_to_many :regions, :order => :ordinal.asc
   add_association_dependencies :regions => :destroy
+  one_to_many :builds, :read_only => true, :dataset => proc {
+    Build.join(:regions, :id => :current_region_id).filter(:regions__application_id => id)
+  }
 
   def region_with_name(name) regions_dataset.first(:name => name) end
 
