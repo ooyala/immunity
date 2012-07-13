@@ -171,7 +171,7 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
   end
 
   def is_reachable?(host)
-    exponential_backoff(3, 0.25) do
+    exponential_backoff(5, 0.25) do
       `curl '#{host}' > /dev/null 2>&1`
       $?.to_i == 0
     end
