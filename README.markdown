@@ -91,6 +91,12 @@ To run them all together in one terminal, we use [Foreman](https://github.com/dd
 You can now access the web UI at http://localhost:3102. You'll need to already have mysql and redis-server
 already running.
 
+### Testing
+
+The integration tests take a real, working webapp through the various stages of an Immunity workflow.
+
+    bundle exec rake test
+
 ### Configuring your app in Immunity
 
 Edit the `config/immunity_apps.rb` file to set up your app and its regions.
