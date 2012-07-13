@@ -109,8 +109,7 @@ class ImmunitySystem < Sinatra::Base
   # - current_region
   post "/applications/:app_name/builds" do
     enforce_required_json_keys(:current_region, :commit)
-    application = Application.first(:name => params[:app_name])
-    halt 400, "Application #{params[:app_name]} doesn't exist." unless application
+    application = enforce_valid_app(params[:app_name])
     region = application.region_with_name(json_body[:current_region])
     halt 400, "Region #{json_body[:current_region]} doesn't exist." unless region
     build = Build.create(:current_region_id => region.id, :is_test_build => json_body[:is_test_build],
@@ -125,6 +124,14 @@ class ImmunitySystem < Sinatra::Base
       build.fire_events(:begin_deploy)
     end
     build.to_json
+  end
+
+  # Used for integration tests to inspect the latest build for an app.
+  get "/applications/:app_name/latest_build" do
+    application = enforce_valid_app(params[:app_name])
+    latest_build = application.builds_dataset.order(:builds__id.desc).first
+    halt 404 unless latest_build
+    latest_build.to_json
   end
 
   before "/builds/:id/?*" do
@@ -221,6 +228,12 @@ class ImmunitySystem < Sinatra::Base
     show_error(400, "Region #{json_body[:region]} doesn't exist for this app.") unless region
     BuildStatus.create(:build_id => @build.id, :message => message, :stdout => json_body[:log],
         :region_id => region.id)
+  end
+
+  def enforce_valid_app(app_name)
+    application = Application.first(:name => app_name)
+    show_error(404, "No application exists with name #{app_name}") unless application
+    application
   end
 
   def enforce_valid_build(build_id)

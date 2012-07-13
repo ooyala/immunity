@@ -9,6 +9,7 @@ require "minitest/autorun"
 # by our normal Resque workers.
 TEST_QUEUE = "integration_testing"
 TEST_APP = "integration_testing_app"
+RESQUE_SERVER = "http://localhost:3103"
 
 #
 # Convenience methods for making requests for builds.

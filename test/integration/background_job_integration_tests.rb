@@ -7,7 +7,6 @@ class MonitoringJobIntegrationTest < Scope::TestCase
   include BuildRequestHelpers
 
   IMMUNITY_SERVER = "http://localhost:3102"
-  RESQUE_SERVER = "http://localhost:3103"
 
   def server() IMMUNITY_SERVER end
 

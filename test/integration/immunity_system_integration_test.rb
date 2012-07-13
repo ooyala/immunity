@@ -35,6 +35,47 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 200
   end
 
+  context "with a sample app" do
+    setup_once do
+      @@sample_app = "immunity_integration_test_app"
+      sample_app_repo = File.expand_path(File.join(File.dirname(__FILE__), "../fixtures/#{@@sample_app}"))
+
+      delete "/applications/#{@@sample_app}"
+      delete_repo(@@sample_app)
+      `cd #{REPOS_ROOT} && git clone #{sample_app_repo}`
+      assert_equal 0, $?.to_i, "The command `git clone #{sample_app_repo} failed.`"
+      create_application(:name => @@sample_app, :regions => [{ :name => "first", :host => "localhost" }])
+    end
+
+    teardown_once do
+      delete "/applications/#{@@sample_app}"
+      delete_repo(@@sample_app)
+    end
+
+    should "pull new commits from git" do
+      get "/applications/#{@@sample_app}/latest_build"
+      assert_status 404
+
+      # Schedule a fetch_commits job in Resque.
+      use_server(RESQUE_SERVER) do
+        delete "/queues/#{TEST_QUEUE}/jobs"
+        job_args = { :repos => [@@sample_app] }
+        post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "FetchCommits", :arguments => [job_args] }.to_json
+        assert_status 200
+        get "/queues/#{TEST_QUEUE}/result_of_oldest_job"
+        assert_status 200
+      end
+
+      latest_commit = `cd #{repo_path(@@sample_app)} && git rev-list --max-count=1 HEAD`.strip
+
+      # Ensure that the latest Build is now in the database.
+      get "/applications/#{@@sample_app}/latest_build"
+      assert_status 200
+      assert_equal latest_commit, json_response["commit"]
+    end
+  end
+
+  # TODO(philc): These tests can be folded into the context above.
   context "with test application" do
     setup_once do
       delete "/applications/#{TEST_APP}"
@@ -83,5 +124,11 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     end
 
   end
+
+  def repo_path(repo_name) File.join(REPOS_ROOT, repo_name) end
+  def delete_repo(repo_name)
+    FileUtils.rm_rf(repo_path(repo_name)) if File.exists?(repo_path(repo_name))
+  end
+
 
 end

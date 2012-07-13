@@ -30,20 +30,32 @@ class FetchCommits
     end
   end
 
-  def self.fetch_commits(repos)
-    repos.each do |repo_name|
-      logger.info "Fetching new commits from #{repo_name}."
-      project_repo = File.join(REPO_DIRS, repo_name)
+  def self.fetch_commits(applications)
+    applications.each do |app_name|
+      logger.info "Fetching new commits from #{app_name}."
+
+      application = Application.first(:name => app_name)
+      unless application
+        logger.error "Application #{app_name} was not found in the DB."
+        next
+      end
+
+      repo = File.join(REPOS_ROOT, app_name)
+      unless File.exists?(repo)
+        logger.error "Cannot pull from #{repo} -- it doesn't exist on disk."
+        next
+      end
+
       # We perform a "git reset --hard head" in case we've accidentally modified the build during a deploy,
       # e.g. by running `bundle install` which can modify Gemfile.lock.
-      run_command("cd #{project_repo} && git reset --hard origin/master && git pull")
-      # TODO(philc): We must also pull this repo, because html5player has symlinks into it. This will soon
-      # change.
-      run_command("cd #{project_repo} && git pull")
-      latest_commit = run_command("cd #{project_repo} && git rev-list --max-count=1 HEAD").strip
-      if Build.first(:commit => latest_commit, :repo => repo_name).nil?
-        logger.info "#{repo_name} has new commits. The latest is now #{latest_commit}."
-        build = Build.create(:commit => latest_commit, :repo => repo_name)
+      run_command("cd #{repo} && git reset --hard origin/master && git pull")
+      run_command("cd #{repo} && git pull")
+      latest_commit = run_command("cd #{repo} && git rev-list --max-count=1 HEAD").strip
+
+      if Build.first(:commit => latest_commit, :repo => repo).nil?
+        logger.info "#{repo} has new commits. The latest is now #{latest_commit}."
+        build = Build.create(:commit => latest_commit, :repo => repo,
+            :current_region_id => application.regions.first.id)
         build.fire_events(:begin_deploy)
       end
     end
