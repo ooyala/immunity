@@ -21,8 +21,7 @@ class FetchCommits
     Build.select(1).first rescue nil
 
     begin
-      # TODO(philc): This repo name shouldn't be hardcoded here.
-      repos = arguments["repos"] || ["html5player"]
+      repos = arguments["repos"] || Application.all.map(&:name)
       fetch_commits(repos)
     rescue => exception
       logger.info("Failed to complete job: #{exception}")
