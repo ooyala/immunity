@@ -112,8 +112,7 @@ class ImmunitySystem < Sinatra::Base
     application = enforce_valid_app(params[:app_name])
     region = application.region_with_name(json_body[:current_region])
     halt 400, "Region #{json_body[:current_region]} doesn't exist." unless region
-    build = Build.create(:current_region_id => region.id, :is_test_build => json_body[:is_test_build],
-        :commit => json_body[:commit])
+    build = Build.create(:current_region_id => region.id, :commit => json_body[:commit])
     # NOTE(philc): you can set the state of a build without jumping through the state machine. Use this
     # carefully. It's useful for integration tests, but we may want to remove it if these APIs are ever
     # used by anyone else.

@@ -67,7 +67,7 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       # Schedule a fetch_commits job in Resque.
       use_server(RESQUE_SERVER) do
         delete "/queues/#{TEST_QUEUE}/jobs"
-        job_args = { :repos => [@@sample_app] }
+        job_args = { :applications => [@@sample_app] }
         post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "FetchCommits", :arguments => [job_args] }.to_json
         assert_status 200
         get "/queues/#{TEST_QUEUE}/result_of_oldest_job"

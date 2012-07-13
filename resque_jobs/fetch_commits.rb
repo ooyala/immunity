@@ -21,8 +21,8 @@ class FetchCommits
     Build.select(1).first rescue nil
 
     begin
-      repos = arguments["repos"] || Application.all.map(&:name)
-      fetch_commits(repos)
+      applications = arguments["applications"] || Application.all.map(&:name)
+      fetch_commits(applications)
     rescue => exception
       logger.info("Failed to complete job: #{exception}")
       raise exception
@@ -51,10 +51,9 @@ class FetchCommits
       run_command("cd #{repo} && git pull")
       latest_commit = run_command("cd #{repo} && git rev-list --max-count=1 HEAD").strip
 
-      if Build.first(:commit => latest_commit, :repo => repo).nil?
+      if Build.first(:commit => latest_commit).nil?
         logger.info "#{repo} has new commits. The latest is now #{latest_commit}."
-        build = Build.create(:commit => latest_commit, :repo => repo,
-            :current_region_id => application.regions.first.id)
+        build = Build.create(:commit => latest_commit, :current_region_id => application.regions.first.id)
         build.fire_events(:begin_deploy)
       end
     end
