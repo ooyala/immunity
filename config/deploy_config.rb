@@ -1,7 +1,7 @@
 # This is the configuration file for Fezzik. See Fezzik's README for details (github.com/dmacdougall/fezzik).
 
 set :app, "immunity_system"
-set :deploy_to, "/opt/ooyala/#{app}"
+set :deploy_to, "/opt/#{app}"
 set :release_path, "#{deploy_to}/releases/#{Time.now.strftime("%Y%m%d%H%M")}"
 set :local_path, Dir.pwd
 set :user, "immunity"
@@ -25,11 +25,3 @@ Fezzik.destination :vagrant do
   host "#{user}@#{hostname}", :deploy_user
 end
 
-Fezzik.destination :prod do
-  set :hostname, "playertools-dev1.us-east-1.ooyala.com"
-  set :domain, "#{user}@#{hostname}"
-  include_env_vars(common_env_vars)
-  Fezzik.env :log_forwarding_redis_host, hostname
-  host "root@#{hostname}", :root_user
-  host "#{user}@#{hostname}", :deploy_user
-end
