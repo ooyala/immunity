@@ -26,6 +26,9 @@ require "bundler/setup"
 require "terraform/dsl"
 include Terraform::Dsl
 
+ensure_run_once("git submodule init") { shell "git submodule init" }
+ensure_run_once("git submodule update") { shell "git submodule update" }
+
 def db_exists?(db_name)
   shell("#{mysql_command} -u root #{db_name} -e 'select 1' 2> /dev/null", :silent => true) rescue false
 end
