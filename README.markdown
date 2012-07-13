@@ -1,3 +1,5 @@
+**Note that Immunity is a work in progress and not yet in production use.**
+
 Immunity System
 ===============
 
