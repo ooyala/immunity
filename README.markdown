@@ -1,4 +1,4 @@
-**Note that Immunity is a work in progress and not yet in production use.**
+**Note that Immunity is a work in progress and not yet in production use. It still has Ooyala-specific elements to the code.**
 
 Immunity System
 ===============
@@ -48,23 +48,23 @@ Why Immunity
 ============
 
 Building a continuous, staged deployment workflow for your app is hard and always application-specific.
-Immunity makes it easier to script these workflows:
+Immunity makes it easier to script these workflows with these features:
 
 * A basic workflow engine that's specific to deploying versions of code to groups of servers, including
 "monitoring application metrics".
 * A UI which succinctly visualizes the current state of your deployment pipeline along with metrics useful for
 troubleshooting.
-* A focused and easy to extend code base.
+* A focused and easy-to-extend code base.
 
-These features reduce a lot of complexity needed for scripting a robust continuous deployment and ensure that
-you don't have to beat your tool into submission to get it to do what you want.
+These features reduce a lot of the complexity needed for scripting a robust continuous deployment and ensure
+that you don't have to beat your infrastructure into submission to get it to do what you want.
 
 Why not use something like Jenkins for this?
 --------------------------------------------
-Jenkins is a generic job server which can be used to power to run jobs like "deployment version X" or "run the
+Jenkins is a generic job server which can be used to run jobs like "deploy version X" or "run the
 tests for version Y". However, since it is a generic job server, it takes a lot of configuration to set up a
 sophisticated staged deployment, and it does not naturally support the notion of a "application monitoring
-period", does not naturally visualize.
+period".
 
 Most importantly, when depending on this deployment pipeline as the lifeline of your app or business, it's
 critical to have your deployment pipeline dashboarded succinctly and to have informative and useful
@@ -92,27 +92,7 @@ You'll need to already have mysql and redis-server already running.
 
 ### Configuring your app in Immunity
 
-Edit the config/immunity_apps.rb file to set up your app and its regions.
+Edit the `config/immunity_apps.rb` file to set up your app and its regions.
 
 Then clone your app's repo into ~/immunity_repos, using the same directory name that you specified in
 config/immunity_apps.rb. Now, Immunity will poll this repo for new commits.
-
-Deploying Immunity
-==================
-
-Start your [Vagrant](http://vagrantup.com) VM:
-
-    vagrant up
-
-Prepare vagrant for Immunity:
-
-    ./script/setup_vagrant.rb
-
-    # You can ssh into vagrant as root now:
-    ssh root@immunity_system_vagrant
-
-Deploy the immunity system to vagrant.
-
-    bundle exec fez vagrant deploy
-
-Read through the Fezzik deploy config in `config/tasks/deploy.rake`.
