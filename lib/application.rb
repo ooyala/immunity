@@ -16,6 +16,18 @@ class Application < Sequel::Model
 
   def region_with_name(name) regions_dataset.first(:name => name) end
 
+  def repo_path() File.join(REPOS_ROOT, name) end
+
+  # Some configuration values of an application (like deploy_command and test_command) contain
+  # variable placeholders, like "bundle exec deploy {{region}}". This method substitute any variables
+  # given in the properties hash.
+  def substitute_variables(string, variables_hash)
+    string.gsub(/\{\{.+?\}\}/) do |value|
+      variable_name = value[2...-2].to_sym
+      variables_hash.include?(variable_name) ? variables_hash[variable_name] : value
+    end
+  end
+
   # Ensures this application matches the application definition as specified by properties_hash.
   # That will include creating and destroying regions as needed, and ensuring the regions are ordered
   # to match the region ordering given in properties_hash.
@@ -24,6 +36,9 @@ class Application < Sequel::Model
   def update_from_properties_hash(properties_hash)
     DB.transaction do
       self.is_test = (properties_hash[:is_test] == true)
+      self.deploy_command = properties_hash[:deploy_command]
+      self.test_command = properties_hash[:test_command]
+
       new_regions = properties_hash[:regions]
       region_names = new_regions.map { |region| region[:name].to_s }
       self.regions.reject { |region| region_names.include?(region.name) }.each(&:destroy)

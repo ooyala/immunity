@@ -5,6 +5,8 @@
 
 IMMUNITY_APPS = {
   :api_server => {
+    :deploy_command => "be fez deploy {{region}}",
+    :test_command => "",
     :regions => [
       { :name => "sandbox1", :host => "papi-ci.us-east-1.ooyala.com" },
       # TODO(philc): Change papi1 and papi2 to "requires_monitoring => true" once we have monitoring ready.
