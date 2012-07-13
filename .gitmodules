@@ -1,0 +1,3 @@
+[submodule "test/fixtures/immunity_integration_test_app"]
+	path = test/fixtures/immunity_integration_test_app
+	url = git://github.com/ooyala/immunity_integration_test_app.git
