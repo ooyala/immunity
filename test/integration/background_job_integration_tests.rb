@@ -62,23 +62,6 @@ class MonitoringJobIntegrationTest < Scope::TestCase
     end
   end
 
-  context "fetch commits" do
-    should "successfully access git" do
-      # TODO(philc): Do not skip this test. Have this pull from a test repo on the file system, not from
-      # a real, remote git server.
-      skip
-
-      use_server(RESQUE_SERVER) do
-        job_args = { :repos => ["html5player"] }
-        post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "FetchCommits", :arguments => [job_args] }.to_json
-        assert_status 200
-
-        get "/queues/#{TEST_QUEUE}/result_of_oldest_job"
-        assert_status 200
-      end
-    end
-  end
-
   teardown_once do
     delete "/applications/#{TEST_APP}"
   end
