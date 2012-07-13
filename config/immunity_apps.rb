@@ -5,7 +5,7 @@
 
 IMMUNITY_APPS = {
   :api_server => {
-    :deploy_command => "be fez deploy {{region}}",
+    :deploy_command => "bundle exec fez deploy {{region}}",
     :test_command => "",
     :regions => [
       { :name => "sandbox1", :host => "papi-ci.us-east-1.ooyala.com" },
