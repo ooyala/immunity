@@ -14,8 +14,6 @@ class Build < Sequel::Model
 
   MONITORING_PERIOD_DURATION = 45 # seconds.
 
-  REPO_DIRS = File.expand_path("~/immunity_repos/")
-
   def readable_name() "Build #{id} (#{short_commit})" end
 
   # An abbreviated commit SHA instead of the usual long SHA.
@@ -182,7 +180,7 @@ class Build < Sequel::Model
 
   # TODO(philc): We should issue these commands in a nonblocking fashion.
   def run_command_with_timeout(command, project_path, timeout)
-    project_path = File.join(REPO_DIRS, project_path)
+    project_path = File.join(REPOS_ROOT, project_path)
     command = "BUNDLE_GEMFILE='' && cd #{project_path} && #{command}"
     puts "Running #{command}"
     Timeout.timeout(timeout) do

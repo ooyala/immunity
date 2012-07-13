@@ -11,8 +11,6 @@ class DeployBuild
   include JobsHelper
   @queue = :deply_builds
 
-  REPO_DIRS = File.expand_path("~/immunity_repos/")
-
   HOST = "http://localhost:3102"
 
   def self.perform(repo_name, commit, region_name, build_id)
@@ -31,8 +29,8 @@ class DeployBuild
 
   def self.deploy_commit(repo_name, commit, region_name, build_id)
     region = Build.first(:id => build_id).application.region_with_name(region_name)
-    @logger.info "deploying the commit #{REPO_DIRS}: #{repo_name}, #{commit}, #{region.name}"
-    project_repo = File.join(REPO_DIRS, repo_name)
+    @logger.info "deploying the commit #{REPOS_ROOT}: #{repo_name}, #{commit}, #{region.name}"
+    project_repo = File.join(REPOS_ROOT, repo_name)
     # TODO(philc): Extract out this command into configuration.
     stdout, stderr = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region.name} 2>&1")
     stdout

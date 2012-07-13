@@ -11,8 +11,6 @@ class FetchCommits
   include JobsHelper
   @queue = :fetch_commits
 
-  REPO_DIRS = File.expand_path("~/immunity_repos/")
-
   # The arguments hash is used by our integration tests to test each main logic path.
   # - repos: the list of repo names to git fetch.
   def self.perform(arguments = {})
