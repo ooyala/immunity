@@ -47,8 +47,6 @@ production. It's used to detect more subtle breakages under real customer usage 
 Why Immunity
 ============
 
-Note that Immunity is a work in progress and not yet in production use.
-
 Building a continuous, staged deployment workflow for your app is hard and always application-specific.
 Immunity makes it easier to script these workflows:
 
@@ -117,4 +115,4 @@ Deploy the immunity system to vagrant.
 
     bundle exec fez vagrant deploy
 
-# Read through the Fezzik deploy config in `config/tasks/deploy.rake`.
+Read through the Fezzik deploy config in `config/tasks/deploy.rake`.
