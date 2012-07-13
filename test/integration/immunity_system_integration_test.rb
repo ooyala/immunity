@@ -23,7 +23,9 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     delete "/applications/#{app_name}"
 
     # TODO(philc): We need to set a repo name, and prevent it from scheduling a deploy.
-    app_config = { :regions => [{ :name => "howdy", :host => "localhost" }] }
+    app_config = {
+      :regions => [{ :name => "howdy", :host => "localhost", :requires_manual_approval => true }]
+    }
     put "/applications/#{app_name}", {}, app_config.to_json
     assert_status 200
 
@@ -35,21 +37,26 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 200
   end
 
-  context "with a sample app" do
+  context "with a real, working web app" do
     setup_once do
       @@sample_app = "immunity_integration_test_app"
+      @@sample_app_url = "http://localhost:3105"
       sample_app_repo = File.expand_path(File.join(File.dirname(__FILE__), "../fixtures/#{@@sample_app}"))
 
       delete "/applications/#{@@sample_app}"
       delete_repo(@@sample_app)
       `cd #{REPOS_ROOT} && git clone #{sample_app_repo}`
       assert_equal 0, $?.to_i, "The command `git clone #{sample_app_repo} failed.`"
-      create_application(:name => @@sample_app, :regions => [{ :name => "first", :host => "localhost" }])
+      create_application(
+        :name => @@sample_app,
+        :is_test => true,
+        :deploy_command => "bundle exec rake deploy",
+        :regions => [{ :name => "first", :host => "localhost" }])
     end
 
     teardown_once do
-      delete "/applications/#{@@sample_app}"
-      delete_repo(@@sample_app)
+      # delete "/applications/#{@@sample_app}"
+      # delete_repo(@@sample_app)
     end
 
     should "pull new commits from git" do
@@ -72,6 +79,39 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       get "/applications/#{@@sample_app}/latest_build"
       assert_status 200
       assert_equal latest_commit, json_response["commit"]
+      assert_equal "deploying", json_response["state"]
+    end
+
+    context "deployment" do
+      should "deploy the latest version of the app" do
+        get "/applications/#{@@sample_app}/latest_build"
+        assert_status 200
+        assert_equal "deploying", json_response["state"]
+        build_id = json_response["id"]
+
+        use_server(RESQUE_SERVER) do
+          delete "/queues/#{TEST_QUEUE}/jobs"
+          job_args = { :build_id => build_id }
+          post "/queues/#{TEST_QUEUE}/jobs", {}, { :class => "DeployBuild", :arguments => [job_args] }.to_json
+          assert_status 200
+          get "/queues/#{TEST_QUEUE}/result_of_oldest_job"
+          assert_status 200
+        end
+
+        get "/applications/#{@@sample_app}/latest_build"
+        assert_equal "testing", json_response["state"]
+        # Our test app should be deployed and started.
+        assert is_reachable?(@@sample_app_url)
+      end
+
+      teardown_once do
+        # Ensure the test app is stopped.
+        next
+        app_path = "/tmp/#{@@sample_app}"
+        if File.exists?(app_path)
+          `cd #{app_path} && bundle exec rake stop`
+        end
+      end
     end
   end
 
@@ -130,5 +170,22 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     FileUtils.rm_rf(repo_path(repo_name)) if File.exists?(repo_path(repo_name))
   end
 
+  def is_reachable?(host)
+    exponential_backoff(3, 0.25) do
+      `curl '#{host}' > /dev/null 2>&1`
+      $?.to_i == 0
+    end
+  end
+
+  def exponential_backoff(max_attempts, initial_sleep_time, &block)
+    start = Time.now
+    current_sleep_time = initial_sleep_time
+    0.upto(max_attempts) do |i|
+      return true if block.call
+      return false if i >= (max_attempts - 1)
+      sleep current_sleep_time
+      current_sleep_time *= 2
+    end
+  end
 
 end

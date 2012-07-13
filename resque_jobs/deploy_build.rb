@@ -11,32 +11,38 @@ class DeployBuild
   include JobsHelper
   @queue = :deply_builds
 
-  HOST = "http://localhost:3102"
+  IMMUNITY_HOST = "http://localhost:3102"
 
-  def self.perform(repo_name, commit, region_name, build_id)
+  # - arguments: { build_id, region_id (optional) }
+  def self.perform(arguments = {})
     setup_logger("deply_builds.log")
+
+    # Reconnect to the database if our connection has timed out.
+    Build.select(1).first rescue nil
+
     begin
-      stdout = self.deploy_commit(repo, commit, region_name, build_id)
-      # TODO(philc): This will return success even if the deploy failed. Check the exit value of fez instead.
-      RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
-          { :status => "success", :log => stdout, :region => region_name }.to_json
+      build = Build[arguments["build_id"]]
+      region = arguments["region_id"] ? Region[arguments["region_id"]] : build.current_region
+      stdout = deploy_commit(build, region)
+      RestClient.put "#{IMMUNITY_HOST}/builds/#{build.id}/deploy_status",
+          { :status => "success", :log => stdout, :region => region.name }.to_json
     rescue Exception => error
       message = "Failure running the deploy: #{error.detailed_to_s}"
-      RestClient.put "#{HOST}/builds/#{build_id}/deploy_status",
-          { :status => "failed", :log => message, :region => region_name }.to_json
+      logger.warn message
+      RestClient.put "#{IMMUNITY_HOST}/builds/#{build.id}/deploy_status",
+          { :status => "failed", :log => message, :region => region.name }.to_json
     end
   end
 
-  def self.deploy_commit(repo_name, commit, region_name, build_id)
-    region = Build.first(:id => build_id).application.region_with_name(region_name)
-    @logger.info "deploying the commit #{REPOS_ROOT}: #{repo_name}, #{commit}, #{region.name}"
-    project_repo = File.join(REPOS_ROOT, repo_name)
-    # TODO(philc): Extract out this command into configuration.
-    stdout, stderr = self.run_command("cd #{project_repo} && ./run_deploy.sh #{region.name} 2>&1")
+  def self.deploy_commit(build, region)
+    application = region.application
+    @logger.info "deploying the commit #{application.name} #{build.commit} to #{region.name}."
+    deploy_command = application.substitute_variables(application.deploy_command, :region => region.name)
+    stdout, stderr = run_command("unset BUNDLE_GEMFILE; cd #{application.repo_path} && #{deploy_command} 2>&1")
     stdout
   end
 end
 
 if $0 == __FILE__
-  DeployBuild.perform("html5player", "a583b85dcb2d47932f9bf4a9a221fe4a8baccef8", "sandbox1", 18)
+  DeployBuild.perform({ "build_id" => Build.first.id })
 end

@@ -124,7 +124,7 @@ class Build < Sequel::Model
 
   def schedule_deploy
     puts "Scheduling deploy to #{current_region.name} #{state}"
-    Resque.enqueue(DeployBuild, repo, commit, current_region.name, id)
+    Resque.enqueue(DeployBuild, :build_id => id, :region_id => current_region.id)
   end
 
   def schedule_test
