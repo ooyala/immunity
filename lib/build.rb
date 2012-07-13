@@ -178,20 +178,6 @@ class Build < Sequel::Model
     log_transition_failure(raised_error.message, details)
   end
 
-  # TODO(philc): We should issue these commands in a nonblocking fashion.
-  def run_command_with_timeout(command, project_path, timeout)
-    project_path = File.join(REPOS_ROOT, project_path)
-    command = "BUNDLE_GEMFILE='' && cd #{project_path} && #{command}"
-    puts "Running #{command}"
-    Timeout.timeout(timeout) do
-      pid, stdin, stdout, stderr = Open4::popen4(command)
-      stdin.close
-      ignored, status = Process::waitpid2 pid
-      raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
-      [stdout.read.strip, stderr.read.strip]
-    end
-  end
-
   # TODO(philc): Rip this out of here and put it into a separate object which records the summary data about
   # monitoring. It was put here for demo reasons.
   def monitoring_stats(region = current_region)
