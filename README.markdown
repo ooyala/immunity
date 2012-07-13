@@ -88,7 +88,8 @@ To run them all together in one terminal, we use [Foreman](https://github.com/dd
 
     bundle exec foreman start
 
-You'll need to already have mysql and redis-server already running.
+You can now access the web UI at http://localhost:3102. You'll need to already have mysql and redis-server
+already running.
 
 ### Configuring your app in Immunity
 
