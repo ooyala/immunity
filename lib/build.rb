@@ -4,6 +4,7 @@ require "resque_jobs/run_tests"
 require "lib/build_status"
 require "timeout"
 require "rest_client"
+require "logger"
 
 # NOTE(philc): Be careful when developing; some types of changes to this state machine do not completely
 # unload and reload with Sinatra reloader.
@@ -13,6 +14,13 @@ class Build < Sequel::Model
   add_association_dependencies :build_statuses => :destroy
 
   MONITORING_PERIOD_DURATION = 45 # seconds.
+
+  attr_accessor :logger
+
+  def initialize(values = {}, from_db = false)
+    super
+    self.logger = Logger.new(STDOUT)
+  end
 
   def readable_name() "Build #{id} (#{short_commit})" end
 
@@ -123,17 +131,17 @@ class Build < Sequel::Model
   end
 
   def schedule_deploy
-    puts "Scheduling deploy to #{current_region.name} #{state}"
+    @logger.info "Scheduling deploy to #{current_region.name} #{state}"
     Resque.enqueue(DeployBuild, :build_id => id, :region_id => current_region.id)
   end
 
   def schedule_test
-    puts "Scheduling testing for #{current_region.name} #{state}"
+    @logger.info "Scheduling testing for #{current_region.name} #{state}"
     Resque.enqueue(RunTests, repo, current_region.name, id)
   end
 
   def start_mirroring_traffic(from_region, to_region)
-    puts "Beginning to mirror traffic from #{from_region.name} to region #{to_region.name}"
+    @logger.info "Beginning to mirror traffic from #{from_region.name} to region #{to_region.name}"
     redis_queue = "log_forwarding:#{application.name}:#{from_region.name}"
     begin
       RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status",
@@ -153,7 +161,7 @@ class Build < Sequel::Model
 
   # Returns true if successful.
   def stop_mirroring_traffic(from_region, to_region)
-    puts "Stopping to mirror traffic from #{from_region.name}."
+    @logger.info "Stopping to mirror traffic from #{from_region.name}."
     error = nil
     begin
       RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status", :enabled => false)
@@ -202,7 +210,7 @@ class Build < Sequel::Model
   end
 
   def notify_deploy_failed
-    puts "deploy to #{current_region} failed."
+    @logger.info "deploy to #{current_region} failed."
     # TODO(philc): Raise the alarm.
   end
 

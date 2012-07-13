@@ -2,6 +2,7 @@ require "bundler/setup"
 require "pathological"
 require "test/unit_test_helper"
 require "lib/models"
+require "logger"
 
 class BuildTest < Scope::TestCase
   prevent_live_database_access
@@ -15,7 +16,7 @@ class BuildTest < Scope::TestCase
     stub(application).regions { [@region1, @region2] }
     stub(@build).current_region { @region1 }
     stub_saving(@build)
-
+    @build.logger = Logger.new("/dev/null")
   end
 
   context "log forwarding" do
