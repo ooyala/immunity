@@ -169,10 +169,9 @@ class Build < Sequel::Model
       log_monitoring_failure(error)
     end
 
-    return error.nil?
+    # TODO(philc): Stop the log replay daemon.
 
-    # TODO(philc): Stop the log replay.
-
+    error.nil?
   end
 
   def halt_mirroring()
@@ -211,7 +210,7 @@ class Build < Sequel::Model
 
   def notify_deploy_failed
     @logger.info "deploy to #{current_region} failed."
-    # TODO(philc): Raise the alarm.
+    # TODO(philc): Send an email notification.
   end
 
   # A debugging method we use via ./script/console to make the system treat this build as a fresh new commit.

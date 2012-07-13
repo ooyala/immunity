@@ -1,4 +1,4 @@
-# A Resque job to run "git pull" on a given repo and add an entry for the latest commit.
+# A Resque job which deploys a build to a given region.
 
 require "pathological"
 require "script/script_environment"

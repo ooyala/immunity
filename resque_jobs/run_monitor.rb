@@ -1,4 +1,5 @@
-# A Resque job to run "git pull" on a given repo and add an entry for the latest commit.
+# A resque job which polls for builds which have been in "monitoring" for > N minutes and inspects their
+# application metrics to determine if they are good builds.
 
 require "pathological"
 require "script/script_environment"
@@ -36,8 +37,7 @@ class RunMonitor
 
     latency_upper_bound = arguments["latency_upper_bound"] || LATENCY_UPPER_BOUND
 
-    # TODO(philc): This is just a toy comparison which needs to be reimplemented this to be more
-    # complete and informative.
+    # TODO(philc): This is just a toy comparison which needs to be reimplemented.
     begin
       redis = Redis.new :host => REDIS_SERVER, :port => REDIS_PORT
       stats = build.monitoring_stats

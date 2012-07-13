@@ -4,7 +4,7 @@ require "redis/objects"
 require "redis/list"
 
 class RedisLogReader
-  
+
   def initialize(host, port)
     @redis = Redis.new(:host => host, :port => port)
   end
@@ -13,12 +13,12 @@ class RedisLogReader
     errors = Redis::List.new("#{operating_mode}:errors", @redis, :marshal => true)
     errors.range(offset, offset + limit -1)
   end
-  
+
   def recent_success(operating_mode, region, offset = 0, limit = 5)
     successes = Redis::List.new("#{operating_mode}:#{region}:success", @redis, :marshal => true)
     successes.range(offset, offset + limit -1)
   end
-  
+
   def get_monitor_metrics(operating_mode, region)
     today = Time.now.gmtime
     max_entry_in_redis = Time.now.gmtime - REDIS_LOG_MAX_TTL

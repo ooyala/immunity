@@ -1,4 +1,5 @@
-# A Resque job to run "git pull" on a given repo and add an entry for the latest commit.
+# A Resque job which invokes the integration tests for a deployed build.
+# This job needs to be reimplemented to use Application.test_command.
 
 require "pathological"
 require "script/script_environment"
@@ -41,6 +42,7 @@ class RunTests
   def self.start_tests(repo_name, region)
     @logger.info "Running tests for #{repo_name} #{region.name}"
     project_repo = File.join(REPOS_ROOT, repo_name)
+    # TODO(philc): Use the parameterized application.test_command instead of hardcoding this.
     result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region.name} 2>&1")
   end
 end
