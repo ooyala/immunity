@@ -40,18 +40,7 @@ end
 
 ensure_run_once("migrations") { shell "script/run_migrations.rb" }
 
-# TODO(philc): Which repos to clone shouldn't be here as part of the deploy script, but rather a piece of
-# the app's configuration or settings.
-repos = ["html5player"]
 repos_path = File.expand_path("~/immunity_repos")
-repos.each do |repo_name|
-  dep "clone the #{repo_name} git repo" do
-    met? { File.exists?(File.join(repos_path, repo_name)) }
-    meet do
-      FileUtils.mkdir_p(repos_path)
-      shell "cd '#{repos_path}' && git clone ssh://git.corp.ooyala.com/#{repo_name}.git"
-    end
-  end
-end
+FileUtils.mkdir_p(repos_path)
 
 satisfy_dependencies()
