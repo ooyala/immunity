@@ -6,7 +6,6 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
   include RemoteHttpTesting
   include BuildRequestHelpers
 
-  # This is the server all HTTP requests will be made to.
   def server() "http://localhost:3102" end
 
   setup_once do
@@ -22,7 +21,6 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     app_name = "testing"
     delete "/applications/#{app_name}"
 
-    # TODO(philc): We need to set a repo name, and prevent it from scheduling a deploy.
     app_config = {
       :regions => [{ :name => "howdy", :host => "localhost", :requires_manual_approval => true }]
     }
@@ -37,6 +35,8 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     assert_status 200
   end
 
+  # Take a simple, real webapp through the critical phases of the Immunity workflow.
+  # The "immunity_integration_test_app" is checked out as a submodule into test/fixtures.
   context "with a real, working web app" do
     setup_once do
       @@sample_app = "immunity_integration_test_app"
@@ -47,6 +47,7 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
       delete_repo(@@sample_app)
       `cd #{REPOS_ROOT} && git clone #{sample_app_repo}`
       assert_equal 0, $?.to_i, "The command `git clone #{sample_app_repo} failed.`"
+
       create_application(
         :name => @@sample_app,
         :is_test => true,
@@ -55,8 +56,8 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     end
 
     teardown_once do
-      # delete "/applications/#{@@sample_app}"
-      # delete_repo(@@sample_app)
+      delete "/applications/#{@@sample_app}"
+      delete_repo(@@sample_app)
     end
 
     should "pull new commits from git" do
@@ -115,7 +116,7 @@ class ImmunitySystemIntegrationTest < Scope::TestCase
     end
   end
 
-  # TODO(philc): These tests can be folded into the context above.
+  # TODO(philc): These tests can perhaps be folded into the context above ("with a real working webapp").
   context "with test application" do
     setup_once do
       delete "/applications/#{TEST_APP}"
