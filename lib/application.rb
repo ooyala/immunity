@@ -11,7 +11,7 @@ class Application < Sequel::Model
   one_to_many :regions, :order => :ordinal.asc
   add_association_dependencies :regions => :destroy
   one_to_many :builds, :read_only => true, :dataset => proc {
-    Build.join(:regions, :id => :current_region_id).filter(:regions__application_id => id)
+    Build.filter(:current_region_id => Region.select(:id).filter(:application_id => id).map(&:id))
   }
 
   def region_with_name(name) regions_dataset.first(:name => name) end
