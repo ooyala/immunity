@@ -9,7 +9,7 @@ require "rest_client"
 
 class DeployBuild
   include JobsHelper
-  @queue = :deply_builds
+  @queue = :deploy_builds
 
   IMMUNITY_HOST = "http://localhost:3102"
 
