@@ -36,8 +36,9 @@ module JobsHelper
       pid, stdin, stdout, stderr = Open4::popen4 command
       stdin.close
       ignored, status = Process::waitpid2 pid
-      raise "The command #{command} failed: #{stderr.read.strip}" unless status.exitstatus == 0
-      [stdout.read.strip, stderr.read.strip]
+
+      return [stdout.read.strip, stderr.read.strip] if status.exitstatus == 0
+      raise "The command #{command} failed: #{stdout.read.strip}\n#{stderr.read.strip}"
     end
   end
 end

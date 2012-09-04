@@ -33,7 +33,8 @@ class RunMonitor
         (arguments["monitoring_period_duration"] || Build::MONITORING_PERIOD_DURATION)
     build_dataset = Build.filter(:state => "monitoring").filter("updated_at <= ?", monitoring_period)
     build = build_dataset.first
-    return if build.nil?
+    @logger.warn "Running monitor on #{build}"
+    return unless build
 
     latency_upper_bound = arguments["latency_upper_bound"] || LATENCY_UPPER_BOUND
 
@@ -44,18 +45,18 @@ class RunMonitor
 
       if stats[:average_latency] > latency_upper_bound
         message = "Monitoring failed. Latency is #{stats[:average]}."
-        puts message
+        @logger.info message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
             { :status => "failed", :log => message, :region => build.current_region.name }.to_json
       else
         message = "Monitoring succeeded."
-        puts message
+        @logger.info message
         RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
             { :status => "success", :log => message, :region => build.current_region.name }.to_json
       end
     rescue Exception => error
       message = error.detailed_to_s
-      puts "Monitor failed with error #{message}."
+      @logger.info "Monitor failed with error #{message}."
       RestClient.put "#{HOST}/builds/#{build.id}/monitoring_status",
           { :status => "failed", :log => message, :region => build.current_region.name }.to_json
     end

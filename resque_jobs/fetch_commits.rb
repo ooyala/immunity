@@ -15,7 +15,7 @@ class FetchCommits
   # - repos: the list of repo names to git fetch.
   def self.perform(arguments = {})
     logger ||= setup_logger("fetch_commits.log")
-    logger.info("beginning to perform fetch_commits")
+    logger.info("Beginning to perform fetch_commits")
 
     # Reconnect to the database if our connection has timed out.
     Build.select(1).first rescue nil
