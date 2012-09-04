@@ -19,7 +19,7 @@ class RunTests
     begin
       application = Build.first(:id => build_id).application
       region = application.region_with_name(region_name) # Should be region id for consistency
-      stdout, stderr = self.start_tests(repo, region)
+      stdout, stderr = self.start_tests(region)
       cleaned_output = stdout.gsub(/\D0 failure/, "").gsub(/\D0 error/, "")
       test_failure = /(\d+) failure/.match(cleaned_output)
       test_error = /(\d+) errors/.match(cleaned_output)
@@ -41,9 +41,9 @@ class RunTests
   end
 
   # TODO use path logic in deploy_build
-  def self.start_tests(repo_name, region)
+  def self.start_tests(region)
     application = region.application
-    @logger.info "Running tests for #{repo_name} #{region.name}"
+    @logger.info "Running tests for #{application.name} #{region.name}"
     test_command = application.substitute_variables(application.test_command, :region => region.name)
     result = self.run_command("cd #{application.repo_path} && #{test_command} 2>&1")
   end
