@@ -5,7 +5,7 @@
     <% errors.each_with_index do |error, i| %>
       <tr>
         <td class="message"><%= error[:message]  %></td>
-		<td class="occuring_path"><%= error[:request_path] %></td>
+        <td class="occuring_path"><%= error[:request_path] %></td>
         <td class="time"><%= format_time(error[:timestamp])  %></td>
       </tr>
     <% end %>

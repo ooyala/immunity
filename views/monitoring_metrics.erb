@@ -4,8 +4,9 @@
   # - build
 %>
 <div class="monitoringMetrics">
-  Requests: <%= build.monitoring_stats[:request_count] %><br/>
-  Average latency: <%= build.monitoring_stats[:average_latency] %>ms<br/>
-  Errors: <%= build.monitoring_stats[:error_count] %><br/>
-  Error rate: <%= trim_decimals(build.monitoring_stats[:error_rate], 2) %>%<br/>
+  <% stats = build.monitoring_stats %>
+  Requests: <%= stats[:request_count] %><br/>
+  Average latency: <%= stats[:average_latency] %>ms<br/>
+  Errors: <%= stats[:error_count] %><br/>
+  Error rate: <%= trim_decimals(stats[:error_rate], 2) %>%<br/>
 </div>
