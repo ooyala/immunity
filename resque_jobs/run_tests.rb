@@ -14,10 +14,11 @@ class RunTests
 
   HOST = "http://localhost:3102"
 
-  def self.perform(repo, region_name, build_id)
+  def self.perform(region_name, build_id)
     setup_logger("run_tests.log")
     begin
-      region = Build.first(:id => build_id).application.region_with_name(region_name)
+      application = Build.first(:id => build_id).application
+      region = application.region_with_name(region_name) # Should be region id for consistency
       stdout, stderr = self.start_tests(repo, region)
       cleaned_output = stdout.gsub(/\D0 failure/, "").gsub(/\D0 error/, "")
       test_failure = /(\d+) failure/.match(cleaned_output)
@@ -39,11 +40,12 @@ class RunTests
     end
   end
 
+  # TODO use path logic in deploy_build
   def self.start_tests(repo_name, region)
+    application = region.application
     @logger.info "Running tests for #{repo_name} #{region.name}"
-    project_repo = File.join(REPOS_ROOT, repo_name)
-    # TODO(philc): Use the parameterized application.test_command instead of hardcoding this.
-    result = self.run_command("cd #{project_repo} && ./run_tests.sh #{region.name} 2>&1")
+    test_command = application.substitute_variables(application.test_command, :region => region.name)
+    result = self.run_command("cd #{application.repo_path} && #{test_command} 2>&1")
   end
 end
 

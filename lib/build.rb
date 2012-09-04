@@ -138,7 +138,7 @@ class Build < Sequel::Model
 
   def schedule_test
     @logger.info "Scheduling testing for #{current_region.name} #{state}"
-    Resque.enqueue(RunTests, application.name, current_region.name, id)
+    Resque.enqueue(RunTests, current_region.name, id)
   end
 
   def start_mirroring_traffic(from_region, to_region)
