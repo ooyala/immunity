@@ -13,7 +13,7 @@ class Build < Sequel::Model
   many_to_one :current_region, :class => Region
   add_association_dependencies :build_statuses => :destroy
 
-  MONITORING_PERIOD_DURATION = 45 # seconds.
+  MONITORING_PERIOD_DURATION = 45 # seconds
 
   attr_accessor :logger
 
@@ -83,6 +83,7 @@ class Build < Sequel::Model
 
     after_transition any => :awaiting_deploy do |transition|
       self.current_region = next_region
+      self.fire_events(:begin_deploy)
     end
 
     after_transition any => :deploying do
@@ -137,10 +138,11 @@ class Build < Sequel::Model
 
   def schedule_test
     @logger.info "Scheduling testing for #{current_region.name} #{state}"
-    Resque.enqueue(RunTests, repo, current_region.name, id)
+    Resque.enqueue(RunTests, application.name, current_region.name, id)
   end
 
   def start_mirroring_traffic(from_region, to_region)
+=begin
     @logger.info "Beginning to mirror traffic from #{from_region.name} to region #{to_region.name}"
     redis_queue = "log_forwarding:#{application.name}:#{from_region.name}"
     begin
@@ -154,6 +156,7 @@ class Build < Sequel::Model
       log_monitoring_failure(error)
       fire_events(:monitoring_failed)
     end
+=end
 
     # TODO(philc): Start log replay.
 
@@ -161,17 +164,20 @@ class Build < Sequel::Model
 
   # Returns true if successful.
   def stop_mirroring_traffic(from_region, to_region)
-    @logger.info "Stopping to mirror traffic from #{from_region.name}."
+=begin
+    @logger.info "Stopping traffic mirroring from #{from_region.name}."
     error = nil
     begin
       RestClient.post("#{from_region.host}:#{LOG_FORWARDER_PORT}/status", :enabled => false)
     rescue Errno::ECONNREFUSED, RestClient::Exception => error
       log_monitoring_failure(error)
     end
+=end
 
     # TODO(philc): Stop the log replay daemon.
 
-    error.nil?
+    #error.nil?
+    true
   end
 
   def halt_mirroring()
