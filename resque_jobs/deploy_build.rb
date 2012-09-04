@@ -9,13 +9,13 @@ require "rest_client"
 
 class DeployBuild
   include JobsHelper
-  @queue = :deply_builds
+  @queue = :deploy_builds
 
   IMMUNITY_HOST = "http://localhost:3102"
 
   # - arguments: { build_id, region_id (optional) }
   def self.perform(arguments = {})
-    setup_logger("deply_builds.log")
+    setup_logger("deploy_builds.log")
 
     # Reconnect to the database if our connection has timed out.
     Build.select(1).first rescue nil
@@ -36,7 +36,7 @@ class DeployBuild
 
   def self.deploy_commit(build, region)
     application = region.application
-    @logger.info "deploying the commit #{application.name} #{build.commit} to #{region.name}."
+    @logger.info "Deploying the commit #{application.name} #{build.commit} to #{region.name}."
     deploy_command = application.substitute_variables(application.deploy_command, :region => region.name)
     stdout, stderr = run_command("unset BUNDLE_GEMFILE; cd #{application.repo_path} && #{deploy_command} 2>&1")
     stdout
